@@ -48,7 +48,7 @@ function OrdenDetallePage() {
   async function aplicarCambio() {
     if (!estado) return;
     try {
-      await cambiar.mutateAsync({ estado_nuevo: estado, comentario: comentario || undefined });
+      await cambiar.mutateAsync({ estado_nuevo: estado, ...(comentario ? { comentario } : {}) });
       toast.success(`Orden actualizada a ${estadoLabel(estado)}`);
       setComentario("");
       setEstado("");
