@@ -62,20 +62,20 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { title: "Inventario", url: "/inventario", icon: Package, roles: ["administrador", "inventario", "asesor", "tecnico"] },
       { title: "Compras", url: "/compras", icon: ShoppingCart, roles: ["administrador", "inventario"] },
       { title: "Proveedores", url: "/proveedores", icon: Truck, roles: ["administrador", "inventario"] },
-      { title: "Facturas y pagos", icon: Receipt, roles: ["administrador", "contador"], pendiente: true },
+      { title: "Facturas y pagos", url: "/facturas", icon: Receipt, roles: ["administrador", "contador", "asesor"] },
     ],
   },
   {
     label: "Analisis",
     items: [
-      { title: "Reportes", icon: BarChart3, roles: ["administrador", "contador"], pendiente: true },
-      { title: "Exportacion Contai", icon: FileSpreadsheet, roles: ["administrador", "contador"], pendiente: true },
-      { title: "Portal cliente", icon: Globe, roles: ["administrador"], pendiente: true },
+      { title: "Reportes", url: "/reportes", icon: BarChart3, roles: ["administrador", "contador"] },
+      { title: "Exportacion Contai", url: "/contai", icon: FileSpreadsheet, roles: ["administrador", "contador"] },
+      { title: "Portal cliente", url: "/portal", icon: Globe, roles: ["administrador", "recepcionista"] },
     ],
   },
   {
     label: "Sistema",
-    items: [{ title: "Configuracion", icon: Cog, roles: ["administrador"], pendiente: true }],
+    items: [{ title: "Configuracion", url: "/configuracion", icon: Cog, roles: ["administrador"] }],
   },
 ];
 
