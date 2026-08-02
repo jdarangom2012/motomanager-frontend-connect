@@ -49,6 +49,7 @@ function CotizacionesPage() {
   const cotizaciones = useCotizaciones();
   const create = useCreateCotizacion();
   const convertir = useConvertirCotizacionEnOrden();
+  const aprobar = useAprobarCotizacion();
 
   const [clienteId, setClienteId] = useState("");
   const [motoId, setMotoId] = useState("");
