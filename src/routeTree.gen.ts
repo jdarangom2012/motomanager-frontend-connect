@@ -13,7 +13,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
 import { Route as AuthenticatedMotocicletasRouteImport } from './routes/_authenticated/motocicletas'
+import { Route as AuthenticatedRecepcionRouteImport } from './routes/_authenticated/recepcion'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,24 +36,39 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDiagnosticoRoute =
+  AuthenticatedDiagnosticoRouteImport.update({
+    id: '/diagnostico',
+    path: '/diagnostico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMotocicletasRoute =
   AuthenticatedMotocicletasRouteImport.update({
     id: '/motocicletas',
     path: '/motocicletas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRecepcionRoute = AuthenticatedRecepcionRouteImport.update({
+  id: '/recepcion',
+  path: '/recepcion',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
+  '/recepcion': typeof AuthenticatedRecepcionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
+  '/recepcion': typeof AuthenticatedRecepcionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,20 +76,36 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/_authenticated/motocicletas': typeof AuthenticatedMotocicletasRoute
+  '/_authenticated/recepcion': typeof AuthenticatedRecepcionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/clientes' | '/dashboard' | '/motocicletas'
+  fullPaths:
+    | '/'
+    | '/clientes'
+    | '/dashboard'
+    | '/diagnostico'
+    | '/motocicletas'
+    | '/recepcion'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/clientes' | '/dashboard' | '/motocicletas'
+  to:
+    | '/'
+    | '/clientes'
+    | '/dashboard'
+    | '/diagnostico'
+    | '/motocicletas'
+    | '/recepcion'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/clientes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/diagnostico'
     | '/_authenticated/motocicletas'
+    | '/_authenticated/recepcion'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -110,11 +143,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/diagnostico': {
+      id: '/_authenticated/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/diagnostico'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/motocicletas': {
       id: '/_authenticated/motocicletas'
       path: '/motocicletas'
       fullPath: '/motocicletas'
       preLoaderRoute: typeof AuthenticatedMotocicletasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recepcion': {
+      id: '/_authenticated/recepcion'
+      path: '/recepcion'
+      fullPath: '/recepcion'
+      preLoaderRoute: typeof AuthenticatedRecepcionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -123,13 +170,17 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
   AuthenticatedMotocicletasRoute: typeof AuthenticatedMotocicletasRoute
+  AuthenticatedRecepcionRoute: typeof AuthenticatedRecepcionRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
   AuthenticatedMotocicletasRoute: AuthenticatedMotocicletasRoute,
+  AuthenticatedRecepcionRoute: AuthenticatedRecepcionRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
