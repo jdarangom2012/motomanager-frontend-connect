@@ -24,6 +24,19 @@ import type {
   RepuestoCompatibilidad,
   Compra,
   CompraWrite,
+  Factura,
+  FacturaWrite,
+  Pago,
+  PagoWrite,
+  FileGenerated,
+  ReportResult,
+  ExportacionContaiRequest,
+  ServicioTaller,
+  PortalEstado,
+  PortalCitaRequest,
+  PortalCitaResponse,
+  ConfiguracionEmpresa,
+  ConfiguracionEmpresaWrite,
 } from "./types";
 
 const listOpts = { staleTime: 15_000, retry: false } as const;
