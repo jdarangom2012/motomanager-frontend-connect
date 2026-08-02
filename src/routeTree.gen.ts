@@ -17,6 +17,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
 import { Route as AuthenticatedMotocicletasRouteImport } from './routes/_authenticated/motocicletas'
 import { Route as AuthenticatedRecepcionRouteImport } from './routes/_authenticated/recepcion'
+import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
 import { Route as AuthenticatedOrdenesIndexRouteImport } from './routes/_authenticated/ordenes.index'
 import { Route as AuthenticatedOrdenesIdRouteImport } from './routes/_authenticated/ordenes.$id'
 
@@ -62,6 +63,11 @@ const AuthenticatedRecepcionRoute = AuthenticatedRecepcionRouteImport.update({
   path: '/recepcion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTecnicosRoute = AuthenticatedTecnicosRouteImport.update({
+  id: '/tecnicos',
+  path: '/tecnicos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedOrdenesIndexRoute =
   AuthenticatedOrdenesIndexRouteImport.update({
     id: '/ordenes/',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/recepcion': typeof AuthenticatedRecepcionRoute
+  '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
   '/ordenes/': typeof AuthenticatedOrdenesIndexRoute
 }
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/recepcion': typeof AuthenticatedRecepcionRoute
+  '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
   '/ordenes': typeof AuthenticatedOrdenesIndexRoute
 }
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
   '/_authenticated/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/_authenticated/recepcion': typeof AuthenticatedRecepcionRoute
+  '/_authenticated/tecnicos': typeof AuthenticatedTecnicosRoute
   '/_authenticated/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
   '/_authenticated/ordenes/': typeof AuthenticatedOrdenesIndexRoute
 }
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/diagnostico'
     | '/motocicletas'
     | '/recepcion'
+    | '/tecnicos'
     | '/ordenes/$id'
     | '/ordenes/'
   fileRoutesByTo: FileRoutesByTo
@@ -130,6 +140,7 @@ export interface FileRouteTypes {
     | '/diagnostico'
     | '/motocicletas'
     | '/recepcion'
+    | '/tecnicos'
     | '/ordenes/$id'
     | '/ordenes'
   id:
@@ -142,6 +153,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diagnostico'
     | '/_authenticated/motocicletas'
     | '/_authenticated/recepcion'
+    | '/_authenticated/tecnicos'
     | '/_authenticated/ordenes/$id'
     | '/_authenticated/ordenes/'
   fileRoutesById: FileRoutesById
@@ -209,6 +221,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecepcionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tecnicos': {
+      id: '/_authenticated/tecnicos'
+      path: '/tecnicos'
+      fullPath: '/tecnicos'
+      preLoaderRoute: typeof AuthenticatedTecnicosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ordenes/': {
       id: '/_authenticated/ordenes/'
       path: '/ordenes'
@@ -233,6 +252,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
   AuthenticatedMotocicletasRoute: typeof AuthenticatedMotocicletasRoute
   AuthenticatedRecepcionRoute: typeof AuthenticatedRecepcionRoute
+  AuthenticatedTecnicosRoute: typeof AuthenticatedTecnicosRoute
   AuthenticatedOrdenesIdRoute: typeof AuthenticatedOrdenesIdRoute
   AuthenticatedOrdenesIndexRoute: typeof AuthenticatedOrdenesIndexRoute
 }
@@ -244,6 +264,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
   AuthenticatedMotocicletasRoute: AuthenticatedMotocicletasRoute,
   AuthenticatedRecepcionRoute: AuthenticatedRecepcionRoute,
+  AuthenticatedTecnicosRoute: AuthenticatedTecnicosRoute,
   AuthenticatedOrdenesIdRoute: AuthenticatedOrdenesIdRoute,
   AuthenticatedOrdenesIndexRoute: AuthenticatedOrdenesIndexRoute,
 }
