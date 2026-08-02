@@ -250,3 +250,111 @@ export type DashboardReport = {
   stock_bajo?: number;
   proximas_citas?: Cita[];
 };
+
+/* ---------- Sprint 05: Tecnicos, Inventario, Proveedores, Compras ---------- */
+
+export type TecnicoWrite = {
+  usuario_id?: UUID;
+  nombre_visible: string;
+  rol_operativo: "tecnico" | "recepcionista" | "administrador";
+  especialidad?: string | null;
+  is_assignable?: boolean;
+  is_active?: boolean;
+};
+
+export type ProveedorResumen = { id: UUID; nombre: string; nit: string } | null;
+
+export type Proveedor = {
+  id: UUID;
+  nit: string;
+  nombre: string;
+  ciudad?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  contacto?: string | null;
+  is_active?: boolean;
+};
+
+export type ProveedorWrite = {
+  nit: string;
+  nombre: string;
+  direccion?: string | null;
+  ciudad?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  contacto?: string | null;
+};
+
+export type Repuesto = {
+  id: UUID;
+  codigo_interno: string;
+  referencia_fabricante?: string | null;
+  codigo_barras?: string | null;
+  nombre: string;
+  marca?: string | null;
+  categoria?: string | null;
+  proveedor?: ProveedorResumen;
+  costo: number;
+  precio: number;
+  stock: number;
+  stock_minimo: number;
+  stock_bajo?: boolean;
+};
+
+export type RepuestoWrite = {
+  proveedor_id?: UUID;
+  codigo_interno: string;
+  referencia_fabricante?: string | null;
+  codigo_barras?: string | null;
+  nombre: string;
+  marca?: string | null;
+  categoria?: string | null;
+  costo: number;
+  precio: number;
+  iva_porcentaje?: number;
+  stock?: number;
+  stock_minimo?: number;
+  ubicacion?: string | null;
+};
+
+export type RepuestoCompatibilidad = {
+  id: UUID;
+  marca_moto: string;
+  modelo_moto: string;
+  anio_desde?: number | null;
+  anio_hasta?: number | null;
+  cilindraje?: string | null;
+  observaciones?: string | null;
+};
+
+export type CompraDetalle = {
+  repuesto: Repuesto;
+  cantidad: number;
+  costo_unitario: number;
+  total_linea: number;
+};
+
+export type Compra = {
+  id: UUID;
+  numero: string;
+  proveedor?: ProveedorResumen;
+  factura_proveedor?: string | null;
+  fecha: string;
+  estado: string;
+  total: number;
+  detalles?: CompraDetalle[];
+};
+
+export type CompraDetalleWrite = {
+  repuesto_id: UUID;
+  cantidad: number;
+  costo_unitario: number;
+  iva_porcentaje?: number;
+};
+
+export type CompraWrite = {
+  proveedor_id: UUID;
+  factura_proveedor?: string | null;
+  fecha: string;
+  detalles: CompraDetalleWrite[];
+};
