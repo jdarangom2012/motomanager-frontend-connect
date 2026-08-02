@@ -333,7 +333,7 @@ export function useConfirmarCompra() {
 
 /* ---------- Sprint 05 parte 2: Facturas, Pagos, Reportes, Contai, Portal, Config ---------- */
 
-export function useFacturas(filters: { fecha_desde?: string; fecha_hasta?: string; estado?: string; page?: number } = {}) {
+export function useFacturas(filters: { fecha_desde?: string | undefined; fecha_hasta?: string | undefined; estado?: string | undefined; page?: number } = {}) {
   return useQuery({
     queryKey: ["facturas", filters],
     queryFn: () =>
@@ -365,7 +365,7 @@ export function useGenerarPdfFactura() {
   });
 }
 
-export function usePagos(filters: { factura_id?: string; fecha_desde?: string; fecha_hasta?: string; page?: number } = {}) {
+export function usePagos(filters: { factura_id?: string | undefined; fecha_desde?: string | undefined; fecha_hasta?: string | undefined; page?: number } = {}) {
   return useQuery({
     queryKey: ["pagos", filters],
     queryFn: () =>
@@ -393,7 +393,7 @@ export function useCreatePago() {
 }
 
 export function useReporteOperativo(
-  filters: { fecha_desde?: string; fecha_hasta?: string; tecnico_id?: string; estado?: string },
+  filters: { fecha_desde?: string | undefined; fecha_hasta?: string | undefined; tecnico_id?: string | undefined; estado?: string | undefined },
   enabled = true,
 ) {
   return useQuery({
