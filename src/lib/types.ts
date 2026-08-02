@@ -387,15 +387,6 @@ export type Factura = {
   pdf_url?: string | null;
 };
 
-export type DocumentoDetalleWrite = {
-  tipo: "mano_obra" | "repuesto";
-  repuesto_id?: UUID;
-  descripcion: string;
-  cantidad: number;
-  precio_unitario: number;
-  descuento?: number;
-  iva_porcentaje?: number;
-};
 
 export type FacturaWrite = {
   orden_id: UUID;
