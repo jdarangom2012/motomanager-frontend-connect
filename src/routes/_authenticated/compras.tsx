@@ -47,7 +47,7 @@ function ComprasPage() {
   const [fecha, setFecha] = useState(today());
   const [detalles, setDetalles] = useState<CompraDetalleWrite[]>([]);
 
-  const query = useCompras({ fecha_desde: desde || undefined, fecha_hasta: hasta || undefined });
+  const query = useCompras({ ...(desde ? { fecha_desde: desde } : {}), ...(hasta ? { fecha_hasta: hasta } : {}) });
   const proveedores = useProveedores("");
   const repuestos = useRepuestos("");
   const create = useCreateCompra();
