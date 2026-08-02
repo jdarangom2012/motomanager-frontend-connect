@@ -127,7 +127,7 @@ export function useAprobarCotizacion() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) =>
-      apiFetch<Cotizacion>(`/cotizaciones/${id}/`, { method: "PATCH", body: { estado: "aprobada" } }),
+      apiFetch<Cotizacion>(`/cotizaciones/${id}/aprobar/`, { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cotizaciones"] }),
   });
 }
