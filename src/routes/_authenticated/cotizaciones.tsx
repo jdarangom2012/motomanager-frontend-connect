@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import {
+  useAprobarCotizacion,
   useClientes,
   useConvertirCotizacionEnOrden,
   useCotizaciones,
