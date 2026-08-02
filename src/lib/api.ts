@@ -107,12 +107,19 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   try {
     response = await doRequest(auth ? tokens.access : null);
   } catch {
+    const desdeHttps =
+      typeof window !== "undefined" &&
+      window.location.protocol === "https:" &&
+      getApiBase().startsWith("http://");
     throw new ApiError(
       0,
       "network_error",
-      `No se pudo conectar con la API (${getApiBase()}). Verifica que el backend este corriendo y que permita CORS desde este origen.`,
+      desdeHttps
+        ? `El navegador bloqueo la conexion a ${getApiBase()} desde una pagina HTTPS (Private Network Access). Abre el frontend en http://localhost:8080 o expon el backend por HTTPS.`
+        : `No se pudo conectar con la API (${getApiBase()}). Verifica que el backend este corriendo y que permita CORS desde este origen.`,
     );
   }
+
 
   if (response.status === 401 && auth && tokens.refresh) {
     const newToken = await refreshAccessToken();
