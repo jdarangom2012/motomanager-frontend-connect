@@ -15,6 +15,7 @@ import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
+import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
 import { Route as AuthenticatedMotocicletasRouteImport } from './routes/_authenticated/motocicletas'
 import { Route as AuthenticatedRecepcionRouteImport } from './routes/_authenticated/recepcion'
 import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
@@ -52,6 +53,11 @@ const AuthenticatedDiagnosticoRoute =
     path: '/diagnostico',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
+  id: '/inventario',
+  path: '/inventario',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMotocicletasRoute =
   AuthenticatedMotocicletasRouteImport.update({
     id: '/motocicletas',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/cotizaciones': typeof AuthenticatedCotizacionesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/inventario': typeof AuthenticatedInventarioRoute
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/recepcion': typeof AuthenticatedRecepcionRoute
   '/tecnicos': typeof AuthenticatedTecnicosRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/cotizaciones': typeof AuthenticatedCotizacionesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/inventario': typeof AuthenticatedInventarioRoute
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/recepcion': typeof AuthenticatedRecepcionRoute
   '/tecnicos': typeof AuthenticatedTecnicosRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/_authenticated/recepcion': typeof AuthenticatedRecepcionRoute
   '/_authenticated/tecnicos': typeof AuthenticatedTecnicosRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/cotizaciones'
     | '/dashboard'
     | '/diagnostico'
+    | '/inventario'
     | '/motocicletas'
     | '/recepcion'
     | '/tecnicos'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/cotizaciones'
     | '/dashboard'
     | '/diagnostico'
+    | '/inventario'
     | '/motocicletas'
     | '/recepcion'
     | '/tecnicos'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cotizaciones'
     | '/_authenticated/dashboard'
     | '/_authenticated/diagnostico'
+    | '/_authenticated/inventario'
     | '/_authenticated/motocicletas'
     | '/_authenticated/recepcion'
     | '/_authenticated/tecnicos'
@@ -207,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDiagnosticoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inventario': {
+      id: '/_authenticated/inventario'
+      path: '/inventario'
+      fullPath: '/inventario'
+      preLoaderRoute: typeof AuthenticatedInventarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/motocicletas': {
       id: '/_authenticated/motocicletas'
       path: '/motocicletas'
@@ -250,6 +269,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
+  AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedMotocicletasRoute: typeof AuthenticatedMotocicletasRoute
   AuthenticatedRecepcionRoute: typeof AuthenticatedRecepcionRoute
   AuthenticatedTecnicosRoute: typeof AuthenticatedTecnicosRoute
@@ -262,6 +282,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
+  AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
   AuthenticatedMotocicletasRoute: AuthenticatedMotocicletasRoute,
   AuthenticatedRecepcionRoute: AuthenticatedRecepcionRoute,
   AuthenticatedTecnicosRoute: AuthenticatedTecnicosRoute,
