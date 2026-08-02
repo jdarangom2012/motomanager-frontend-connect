@@ -24,6 +24,19 @@ import type {
   RepuestoCompatibilidad,
   Compra,
   CompraWrite,
+  Factura,
+  FacturaWrite,
+  Pago,
+  PagoWrite,
+  FileGenerated,
+  ReportResult,
+  ExportacionContaiRequest,
+  ServicioTaller,
+  PortalEstado,
+  PortalCitaRequest,
+  PortalCitaResponse,
+  ConfiguracionEmpresa,
+  ConfiguracionEmpresaWrite,
 } from "./types";
 
 const listOpts = { staleTime: 15_000, retry: false } as const;
@@ -315,5 +328,130 @@ export function useConfirmarCompra() {
       qc.invalidateQueries({ queryKey: ["compras"] });
       qc.invalidateQueries({ queryKey: ["repuestos"] });
     },
+  });
+}
+
+/* ---------- Sprint 05 parte 2: Facturas, Pagos, Reportes, Contai, Portal, Config ---------- */
+
+export function useFacturas(filters: { fecha_desde?: string | undefined; fecha_hasta?: string | undefined; estado?: string | undefined; page?: number } = {}) {
+  return useQuery({
+    queryKey: ["facturas", filters],
+    queryFn: () =>
+      apiFetch<Paginated<Factura>>("/facturas/", {
+        query: {
+          fecha_desde: filters.fecha_desde,
+          fecha_hasta: filters.fecha_hasta,
+          estado: filters.estado,
+          page: filters.page ?? 1,
+        },
+      }),
+    ...listOpts,
+  });
+}
+
+export function useCreateFactura() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: FacturaWrite) => apiFetch<Factura>("/facturas/", { method: "POST", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["facturas"] }),
+  });
+}
+
+export function useGenerarPdfFactura() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<FileGenerated>(`/facturas/${id}/generar-pdf/`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["facturas"] }),
+  });
+}
+
+export function usePagos(filters: { factura_id?: string | undefined; fecha_desde?: string | undefined; fecha_hasta?: string | undefined; page?: number } = {}) {
+  return useQuery({
+    queryKey: ["pagos", filters],
+    queryFn: () =>
+      apiFetch<Paginated<Pago>>("/pagos/", {
+        query: {
+          factura_id: filters.factura_id,
+          fecha_desde: filters.fecha_desde,
+          fecha_hasta: filters.fecha_hasta,
+          page: filters.page ?? 1,
+        },
+      }),
+    ...listOpts,
+  });
+}
+
+export function useCreatePago() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: PagoWrite) => apiFetch<Pago>("/pagos/", { method: "POST", body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pagos"] });
+      qc.invalidateQueries({ queryKey: ["facturas"] });
+    },
+  });
+}
+
+export function useReporteOperativo(
+  filters: { fecha_desde?: string | undefined; fecha_hasta?: string | undefined; tecnico_id?: string | undefined; estado?: string | undefined },
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: ["reporte-operativo", filters],
+    queryFn: () => apiFetch<ReportResult>("/reportes/operativo/", { query: { ...filters } }),
+    enabled,
+    retry: false,
+  });
+}
+
+export function useExportarContai() {
+  return useMutation({
+    mutationFn: (body: ExportacionContaiRequest) =>
+      apiFetch<FileGenerated>("/exportaciones/contai/", { method: "POST", body }),
+  });
+}
+
+export function useServiciosTaller() {
+  return useQuery({
+    queryKey: ["servicios-taller"],
+    queryFn: () => apiFetch<ServicioTaller[]>("/servicios-taller/"),
+    retry: false,
+  });
+}
+
+export function usePortalEstado(params: { placa?: string; numero_orden?: string } | null) {
+  return useQuery({
+    queryKey: ["portal-estado", params],
+    queryFn: () =>
+      apiFetch<PortalEstado>("/portal/estado/", {
+        auth: false,
+        query: { placa: params?.placa, numero_orden: params?.numero_orden },
+      }),
+    enabled: !!params && !!(params.placa || params.numero_orden),
+    retry: false,
+  });
+}
+
+export function useSolicitarCitaPortal() {
+  return useMutation({
+    mutationFn: (body: PortalCitaRequest) =>
+      apiFetch<PortalCitaResponse>("/portal/citas/", { method: "POST", body, auth: false }),
+  });
+}
+
+export function useConfiguracionEmpresa() {
+  return useQuery({
+    queryKey: ["configuracion-empresa"],
+    queryFn: () => apiFetch<ConfiguracionEmpresa>("/configuracion/empresa/"),
+    retry: false,
+  });
+}
+
+export function useUpdateConfiguracionEmpresa() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ConfiguracionEmpresaWrite) =>
+      apiFetch<ConfiguracionEmpresa>("/configuracion/empresa/", { method: "PATCH", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["configuracion-empresa"] }),
   });
 }
