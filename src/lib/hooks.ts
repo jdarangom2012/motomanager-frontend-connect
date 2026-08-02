@@ -226,7 +226,12 @@ export function useRepuestos(search: string, opts: { categoria?: string; stock_b
     queryKey: ["repuestos", search, opts],
     queryFn: () =>
       apiFetch<Paginated<Repuesto>>("/repuestos/", {
-        query: { search, categoria: opts.categoria, stock_bajo: opts.stock_bajo, page: opts.page ?? 1 },
+        query: {
+          search,
+          categoria: opts.categoria,
+          stock_bajo: opts.stock_bajo ? "true" : undefined,
+          page: opts.page ?? 1,
+        },
       }),
     ...listOpts,
   });
