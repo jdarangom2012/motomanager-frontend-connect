@@ -12,4 +12,9 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    // Puerto fijo para desarrollo local (coincide con CORS_ALLOWED_ORIGINS del backend).
+    server: { host: "::", port: 8080 },
+  },
 });
+
