@@ -21,6 +21,7 @@ import { Route as AuthenticatedInventarioRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMotocicletasRouteImport } from './routes/_authenticated/motocicletas'
 import { Route as AuthenticatedProveedoresRouteImport } from './routes/_authenticated/proveedores'
 import { Route as AuthenticatedRecepcionRouteImport } from './routes/_authenticated/recepcion'
+import { Route as AuthenticatedReportesRouteImport } from './routes/_authenticated/reportes'
 import { Route as AuthenticatedTecnicosRouteImport } from './routes/_authenticated/tecnicos'
 import { Route as AuthenticatedOrdenesIndexRouteImport } from './routes/_authenticated/ordenes.index'
 import { Route as AuthenticatedOrdenesIdRouteImport } from './routes/_authenticated/ordenes.$id'
@@ -88,6 +89,11 @@ const AuthenticatedRecepcionRoute = AuthenticatedRecepcionRouteImport.update({
   path: '/recepcion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedReportesRoute = AuthenticatedReportesRouteImport.update({
+  id: '/reportes',
+  path: '/reportes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTecnicosRoute = AuthenticatedTecnicosRouteImport.update({
   id: '/tecnicos',
   path: '/tecnicos',
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/proveedores': typeof AuthenticatedProveedoresRoute
   '/recepcion': typeof AuthenticatedRecepcionRoute
+  '/reportes': typeof AuthenticatedReportesRoute
   '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
   '/ordenes/': typeof AuthenticatedOrdenesIndexRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/proveedores': typeof AuthenticatedProveedoresRoute
   '/recepcion': typeof AuthenticatedRecepcionRoute
+  '/reportes': typeof AuthenticatedReportesRoute
   '/tecnicos': typeof AuthenticatedTecnicosRoute
   '/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
   '/ordenes': typeof AuthenticatedOrdenesIndexRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/_authenticated/motocicletas': typeof AuthenticatedMotocicletasRoute
   '/_authenticated/proveedores': typeof AuthenticatedProveedoresRoute
   '/_authenticated/recepcion': typeof AuthenticatedRecepcionRoute
+  '/_authenticated/reportes': typeof AuthenticatedReportesRoute
   '/_authenticated/tecnicos': typeof AuthenticatedTecnicosRoute
   '/_authenticated/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
   '/_authenticated/ordenes/': typeof AuthenticatedOrdenesIndexRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/motocicletas'
     | '/proveedores'
     | '/recepcion'
+    | '/reportes'
     | '/tecnicos'
     | '/ordenes/$id'
     | '/ordenes/'
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/motocicletas'
     | '/proveedores'
     | '/recepcion'
+    | '/reportes'
     | '/tecnicos'
     | '/ordenes/$id'
     | '/ordenes'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated/motocicletas'
     | '/_authenticated/proveedores'
     | '/_authenticated/recepcion'
+    | '/_authenticated/reportes'
     | '/_authenticated/tecnicos'
     | '/_authenticated/ordenes/$id'
     | '/_authenticated/ordenes/'
@@ -298,6 +310,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecepcionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/reportes': {
+      id: '/_authenticated/reportes'
+      path: '/reportes'
+      fullPath: '/reportes'
+      preLoaderRoute: typeof AuthenticatedReportesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tecnicos': {
       id: '/_authenticated/tecnicos'
       path: '/tecnicos'
@@ -333,6 +352,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMotocicletasRoute: typeof AuthenticatedMotocicletasRoute
   AuthenticatedProveedoresRoute: typeof AuthenticatedProveedoresRoute
   AuthenticatedRecepcionRoute: typeof AuthenticatedRecepcionRoute
+  AuthenticatedReportesRoute: typeof AuthenticatedReportesRoute
   AuthenticatedTecnicosRoute: typeof AuthenticatedTecnicosRoute
   AuthenticatedOrdenesIdRoute: typeof AuthenticatedOrdenesIdRoute
   AuthenticatedOrdenesIndexRoute: typeof AuthenticatedOrdenesIndexRoute
@@ -349,6 +369,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMotocicletasRoute: AuthenticatedMotocicletasRoute,
   AuthenticatedProveedoresRoute: AuthenticatedProveedoresRoute,
   AuthenticatedRecepcionRoute: AuthenticatedRecepcionRoute,
+  AuthenticatedReportesRoute: AuthenticatedReportesRoute,
   AuthenticatedTecnicosRoute: AuthenticatedTecnicosRoute,
   AuthenticatedOrdenesIdRoute: AuthenticatedOrdenesIdRoute,
   AuthenticatedOrdenesIndexRoute: AuthenticatedOrdenesIndexRoute,
