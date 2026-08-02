@@ -119,6 +119,19 @@ export function useCreateCotizacion() {
   });
 }
 
+/**
+ * El OpenAPI no expone un endpoint dedicado de aprobacion.
+ * Se usa el unico existente: PATCH /cotizaciones/{id}/ (cotizaciones_partial_update).
+ */
+export function useAprobarCotizacion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiFetch<Cotizacion>(`/cotizaciones/${id}/`, { method: "PATCH", body: { estado: "aprobada" } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cotizaciones"] }),
+  });
+}
+
 export function useConvertirCotizacionEnOrden() {
   const qc = useQueryClient();
   return useMutation({
