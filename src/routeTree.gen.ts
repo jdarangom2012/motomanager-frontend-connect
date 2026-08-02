@@ -10,33 +10,145 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDiagnosticoRouteImport } from './routes/_authenticated/diagnostico'
+import { Route as AuthenticatedMotocicletasRouteImport } from './routes/_authenticated/motocicletas'
+import { Route as AuthenticatedRecepcionRouteImport } from './routes/_authenticated/recepcion'
+import { Route as AuthenticatedOrdenesIndexRouteImport } from './routes/_authenticated/ordenes.index'
+import { Route as AuthenticatedOrdenesIdRouteImport } from './routes/_authenticated/ordenes.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCotizacionesRoute =
+  AuthenticatedCotizacionesRouteImport.update({
+    id: '/cotizaciones',
+    path: '/cotizaciones',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDiagnosticoRoute =
+  AuthenticatedDiagnosticoRouteImport.update({
+    id: '/diagnostico',
+    path: '/diagnostico',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMotocicletasRoute =
+  AuthenticatedMotocicletasRouteImport.update({
+    id: '/motocicletas',
+    path: '/motocicletas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRecepcionRoute = AuthenticatedRecepcionRouteImport.update({
+  id: '/recepcion',
+  path: '/recepcion',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrdenesIndexRoute =
+  AuthenticatedOrdenesIndexRouteImport.update({
+    id: '/ordenes/',
+    path: '/ordenes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOrdenesIdRoute = AuthenticatedOrdenesIdRouteImport.update({
+  id: '/ordenes/$id',
+  path: '/ordenes/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/clientes': typeof AuthenticatedClientesRoute
+  '/cotizaciones': typeof AuthenticatedCotizacionesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/motocicletas': typeof AuthenticatedMotocicletasRoute
+  '/recepcion': typeof AuthenticatedRecepcionRoute
+  '/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
+  '/ordenes/': typeof AuthenticatedOrdenesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/clientes': typeof AuthenticatedClientesRoute
+  '/cotizaciones': typeof AuthenticatedCotizacionesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/motocicletas': typeof AuthenticatedMotocicletasRoute
+  '/recepcion': typeof AuthenticatedRecepcionRoute
+  '/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
+  '/ordenes': typeof AuthenticatedOrdenesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/diagnostico': typeof AuthenticatedDiagnosticoRoute
+  '/_authenticated/motocicletas': typeof AuthenticatedMotocicletasRoute
+  '/_authenticated/recepcion': typeof AuthenticatedRecepcionRoute
+  '/_authenticated/ordenes/$id': typeof AuthenticatedOrdenesIdRoute
+  '/_authenticated/ordenes/': typeof AuthenticatedOrdenesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/clientes'
+    | '/cotizaciones'
+    | '/dashboard'
+    | '/diagnostico'
+    | '/motocicletas'
+    | '/recepcion'
+    | '/ordenes/$id'
+    | '/ordenes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/clientes'
+    | '/cotizaciones'
+    | '/dashboard'
+    | '/diagnostico'
+    | '/motocicletas'
+    | '/recepcion'
+    | '/ordenes/$id'
+    | '/ordenes'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/clientes'
+    | '/_authenticated/cotizaciones'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/diagnostico'
+    | '/_authenticated/motocicletas'
+    | '/_authenticated/recepcion'
+    | '/_authenticated/ordenes/$id'
+    | '/_authenticated/ordenes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +160,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cotizaciones': {
+      id: '/_authenticated/cotizaciones'
+      path: '/cotizaciones'
+      fullPath: '/cotizaciones'
+      preLoaderRoute: typeof AuthenticatedCotizacionesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/diagnostico': {
+      id: '/_authenticated/diagnostico'
+      path: '/diagnostico'
+      fullPath: '/diagnostico'
+      preLoaderRoute: typeof AuthenticatedDiagnosticoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/motocicletas': {
+      id: '/_authenticated/motocicletas'
+      path: '/motocicletas'
+      fullPath: '/motocicletas'
+      preLoaderRoute: typeof AuthenticatedMotocicletasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recepcion': {
+      id: '/_authenticated/recepcion'
+      path: '/recepcion'
+      fullPath: '/recepcion'
+      preLoaderRoute: typeof AuthenticatedRecepcionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ordenes/': {
+      id: '/_authenticated/ordenes/'
+      path: '/ordenes'
+      fullPath: '/ordenes/'
+      preLoaderRoute: typeof AuthenticatedOrdenesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ordenes/$id': {
+      id: '/_authenticated/ordenes/$id'
+      path: '/ordenes/$id'
+      fullPath: '/ordenes/$id'
+      preLoaderRoute: typeof AuthenticatedOrdenesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDiagnosticoRoute: typeof AuthenticatedDiagnosticoRoute
+  AuthenticatedMotocicletasRoute: typeof AuthenticatedMotocicletasRoute
+  AuthenticatedRecepcionRoute: typeof AuthenticatedRecepcionRoute
+  AuthenticatedOrdenesIdRoute: typeof AuthenticatedOrdenesIdRoute
+  AuthenticatedOrdenesIndexRoute: typeof AuthenticatedOrdenesIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDiagnosticoRoute: AuthenticatedDiagnosticoRoute,
+  AuthenticatedMotocicletasRoute: AuthenticatedMotocicletasRoute,
+  AuthenticatedRecepcionRoute: AuthenticatedRecepcionRoute,
+  AuthenticatedOrdenesIdRoute: AuthenticatedOrdenesIdRoute,
+  AuthenticatedOrdenesIndexRoute: AuthenticatedOrdenesIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
