@@ -358,3 +358,131 @@ export type CompraWrite = {
   fecha: string;
   detalles: CompraDetalleWrite[];
 };
+
+/* ---------- Sprint 05 (parte 2): Facturas, Pagos, Reportes, Contai, Portal, Config ---------- */
+
+export type Adjunto = {
+  id: UUID;
+  entidad_tipo: string;
+  entidad_id: UUID;
+  tipo: string;
+  nombre_original: string;
+  file_url: string;
+  visible_portal: boolean;
+  created_at: string;
+};
+
+export type Factura = {
+  id: UUID;
+  numero: string;
+  orden_id: UUID;
+  orden_numero?: string;
+  tipo?: string;
+  estado: string;
+  cliente?: ClienteResumen;
+  motocicleta?: MotocicletaResumen;
+  fecha: string;
+  total: number;
+  saldo: number;
+  pdf_url?: string | null;
+};
+
+export type DocumentoDetalleWrite = {
+  tipo: "mano_obra" | "repuesto";
+  repuesto_id?: UUID;
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+  descuento?: number;
+  iva_porcentaje?: number;
+};
+
+export type FacturaWrite = {
+  orden_id: UUID;
+  observaciones?: string | null;
+  detalles?: DocumentoDetalleWrite[] | null;
+};
+
+export type PagoMetodo = "efectivo" | "transferencia" | "nequi" | "daviplata" | "tarjeta" | "credito" | "otro";
+
+export type Pago = {
+  id: UUID;
+  factura_id: UUID;
+  fecha: string;
+  metodo: string;
+  valor: number;
+  referencia?: string | null;
+};
+
+export type PagoWrite = {
+  factura_id: UUID;
+  metodo: PagoMetodo;
+  valor: number;
+  referencia?: string | null;
+  observaciones?: string | null;
+};
+
+export type FileGenerated = { file_url: string; filename: string; mime_type: string };
+
+export type ReportResult = {
+  kpis?: Record<string, unknown>;
+  rows?: Record<string, unknown>[];
+};
+
+export type ExportacionContaiRequest = {
+  fecha_desde: string;
+  fecha_hasta: string;
+  formato: "xlsx" | "csv";
+  tipo: "paquete_completo" | "ventas" | "compras" | "pagos" | "inventario";
+};
+
+export type PortalCitaRequest = {
+  servicio_id: UUID;
+  fecha_inicio: string;
+  tecnico_id?: UUID;
+  nombre_cliente: string;
+  celular?: string | null;
+  correo?: string | null;
+  placa: string;
+  motocicleta_descripcion?: string | null;
+  observaciones?: string | null;
+};
+
+export type PortalCitaResponse = { id: UUID; estado: string; mensaje: string };
+
+export type PortalEstado = {
+  orden_numero: string;
+  placa: string;
+  motocicleta: string;
+  estado_actual: string;
+  fecha_estimada_entrega?: string | null;
+  timeline?: { estado: string; descripcion: string; fecha: string }[];
+  adjuntos_visibles?: Adjunto[];
+};
+
+export type ServicioTaller = {
+  id: UUID;
+  nombre: string;
+  duracion_minutos?: number;
+  precio_base?: number;
+  is_active?: boolean;
+};
+
+export type ConfiguracionEmpresa = {
+  impuesto_iva_default?: number;
+  prefijo_recepcion?: string;
+  prefijo_cotizacion?: string;
+  prefijo_orden?: string;
+  prefijo_factura?: string;
+  soporte_texto?: string | null;
+  smtp_configurado?: boolean;
+};
+
+export type ConfiguracionEmpresaWrite = {
+  impuesto_iva_default?: number;
+  prefijo_recepcion?: string;
+  prefijo_cotizacion?: string;
+  prefijo_orden?: string;
+  prefijo_factura?: string;
+  soporte_texto?: string | null;
+};
