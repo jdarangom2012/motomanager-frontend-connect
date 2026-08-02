@@ -260,22 +260,44 @@ function CotizacionesPage() {
                       </TableCell>
                       <TableCell className="text-right font-medium">{formatMoney(c.total, moneda)}</TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          disabled={convertir.isPending}
-                          onClick={async () => {
-                            try {
-                              const orden = await convertir.mutateAsync(c.id);
-                              toast.success(`Orden ${orden.numero ?? ""} creada`);
-                              navigate({ to: "/ordenes/$id", params: { id: orden.id } });
-                            } catch (err) {
-                              toast.error(err instanceof ApiError ? err.message : "No se pudo convertir");
-                            }
-                          }}
-                        >
-                          Convertir en orden
-                        </Button>
+                        {c.estado === "aprobada" ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={convertir.isPending}
+                            onClick={async () => {
+                              try {
+                                const orden = await convertir.mutateAsync(c.id);
+                                toast.success(`Orden ${orden.numero ?? ""} creada`);
+                                navigate({ to: "/ordenes/$id", params: { id: orden.id } });
+                              } catch (err) {
+                                toast.error(err instanceof ApiError ? err.message : "No se pudo convertir");
+                              }
+                            }}
+                          >
+                            Convertir en orden
+                          </Button>
+                        ) : c.estado === "borrador" ? (
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-xs text-muted-foreground">Primero aprueba la cotizacion</span>
+                            <Button
+                              size="sm"
+                              disabled={aprobar.isPending}
+                              onClick={async () => {
+                                try {
+                                  await aprobar.mutateAsync(c.id);
+                                  toast.success(`Cotizacion ${c.numero ?? ""} aprobada`);
+                                } catch (err) {
+                                  toast.error(err instanceof ApiError ? err.message : "No se pudo aprobar");
+                                }
+                              }}
+                            >
+                              {aprobar.isPending ? "Aprobando..." : "Aprobar cotizacion"}
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Sin acciones disponibles</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
