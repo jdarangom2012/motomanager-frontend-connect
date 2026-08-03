@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Mail, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
   useConvertirCotizacionEnOrden,
   useCotizaciones,
   useCreateCotizacion,
+  useEnviarCotizacionEmail,
   useMotocicletas,
 } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -49,8 +50,9 @@ function CotizacionesPage() {
   const motos = useMotocicletas("");
   const cotizaciones = useCotizaciones();
   const create = useCreateCotizacion();
-  const convertir = useConvertirCotizacionEnOrden();
   const aprobar = useAprobarCotizacion();
+  const convertir = useConvertirCotizacionEnOrden();
+  const enviarEmail = useEnviarCotizacionEmail();
 
   const [clienteId, setClienteId] = useState("");
   const [motoId, setMotoId] = useState("");
@@ -139,70 +141,81 @@ function CotizacionesPage() {
             <div className="space-y-2">
               {lineas.map((l, idx) => (
                 <div key={idx} className="grid grid-cols-2 gap-2 rounded-md border p-3 sm:grid-cols-12">
-                  <select
-                    className="h-9 rounded-md border border-input bg-background px-2 text-sm sm:col-span-2"
-                    value={l.tipo}
-                    onChange={(e) => {
-                      const next = [...lineas];
-                      next[idx] = { ...l, tipo: e.target.value as "mano_obra" | "repuesto" };
-                      setLineas(next);
-                    }}
-                  >
-                    <option value="mano_obra">Mano de obra</option>
-                    <option value="repuesto">Repuesto</option>
-                  </select>
-                  <Input
-                    className="sm:col-span-4"
-                    placeholder="Descripcion"
-                    value={l.descripcion}
-                    onChange={(e) => {
-                      const next = [...lineas];
-                      next[idx] = { ...l, descripcion: e.target.value };
-                      setLineas(next);
-                    }}
-                  />
-                  <Input
-                    className="sm:col-span-2"
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    placeholder="Cant."
-                    value={l.cantidad}
-                    onChange={(e) => {
-                      const next = [...lineas];
-                      next[idx] = { ...l, cantidad: Number(e.target.value) };
-                      setLineas(next);
-                    }}
-                  />
-                  <Input
-                    className="sm:col-span-2"
-                    type="number"
-                    min="0"
-                    placeholder="Precio"
-                    value={l.precio_unitario}
-                    onChange={(e) => {
-                      const next = [...lineas];
-                      next[idx] = { ...l, precio_unitario: Number(e.target.value) };
-                      setLineas(next);
-                    }}
-                  />
-                  <Input
-                    className="sm:col-span-1"
-                    type="number"
-                    min="0"
-                    placeholder="IVA %"
-                    value={l.iva_porcentaje ?? 0}
-                    onChange={(e) => {
-                      const next = [...lineas];
-                      next[idx] = { ...l, iva_porcentaje: Number(e.target.value) };
-                      setLineas(next);
-                    }}
-                  />
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs text-muted-foreground">Tipo</Label>
+                    <select
+                      className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                      value={l.tipo}
+                      onChange={(e) => {
+                        const next = [...lineas];
+                        next[idx] = { ...l, tipo: e.target.value as "mano_obra" | "repuesto" };
+                        setLineas(next);
+                      }}
+                    >
+                      <option value="mano_obra">Mano de obra</option>
+                      <option value="repuesto">Repuesto</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1 sm:col-span-4">
+                    <Label className="text-xs text-muted-foreground">Descripcion</Label>
+                    <Input
+                      placeholder="Ej. Cambio de aceite"
+                      value={l.descripcion}
+                      onChange={(e) => {
+                        const next = [...lineas];
+                        next[idx] = { ...l, descripcion: e.target.value };
+                        setLineas(next);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs text-muted-foreground">Cantidad</Label>
+                    <Input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      placeholder="1"
+                      value={l.cantidad}
+                      onChange={(e) => {
+                        const next = [...lineas];
+                        next[idx] = { ...l, cantidad: Number(e.target.value) };
+                        setLineas(next);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-xs text-muted-foreground">Precio unitario</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="0"
+                      value={l.precio_unitario}
+                      onChange={(e) => {
+                        const next = [...lineas];
+                        next[idx] = { ...l, precio_unitario: Number(e.target.value) };
+                        setLineas(next);
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-1">
+                    <Label className="text-xs text-muted-foreground">IVA %</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="19"
+                      value={l.iva_porcentaje ?? 0}
+                      onChange={(e) => {
+                        const next = [...lineas];
+                        next[idx] = { ...l, iva_porcentaje: Number(e.target.value) };
+                        setLineas(next);
+                      }}
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="sm:col-span-1"
+                    className="self-end sm:col-span-1"
                     onClick={() => setLineas(lineas.filter((_, i) => i !== idx))}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -262,44 +275,63 @@ function CotizacionesPage() {
                       </TableCell>
                       <TableCell className="text-right font-medium">{formatMoney(c.total, moneda)}</TableCell>
                       <TableCell className="text-right">
-                        {c.estado === "aprobada" ? (
+                        <div className="flex flex-col items-end gap-1">
                           <Button
                             size="sm"
-                            variant="ghost"
-                            disabled={convertir.isPending}
+                            variant="outline"
+                            disabled={enviarEmail.isPending}
                             onClick={async () => {
                               try {
-                                const orden = await convertir.mutateAsync(c.id);
-                                toast.success(`Orden ${orden.numero ?? ""} creada`);
-                                navigate({ to: "/ordenes/$id", params: { id: orden.id } });
+                                const result = await enviarEmail.mutateAsync({ id: c.id });
+                                toast.success(`Cotizacion enviada a ${result.destinatario}`);
                               } catch (err) {
-                                toast.error(err instanceof ApiError ? err.message : "No se pudo convertir");
+                                toast.error(err instanceof ApiError ? err.message : "No se pudo enviar el correo");
                               }
                             }}
                           >
-                            Convertir en orden
+                            <Mail className="mr-1 h-3.5 w-3.5" />
+                            Enviar correo
                           </Button>
-                        ) : c.estado === "borrador" ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-xs text-muted-foreground">Primero aprueba la cotizacion</span>
+                          {c.estado === "borrador" || c.estado === "enviada" ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={aprobar.isPending}
+                                onClick={async () => {
+                                  try {
+                                    const cotizacion = await aprobar.mutateAsync(c.id);
+                                    toast.success(`Cotizacion ${cotizacion.numero ?? ""} aprobada`);
+                                  } catch (err) {
+                                    toast.error(err instanceof ApiError ? err.message : "No se pudo aprobar");
+                                  }
+                                }}
+                              >
+                                Aprobar cotizacion
+                              </Button>
+                              <span className="text-xs text-muted-foreground">Primero aprueba la cotizacion</span>
+                            </>
+                          ) : c.estado === "aprobada" ? (
                             <Button
                               size="sm"
-                              disabled={aprobar.isPending}
+                              variant="ghost"
+                              disabled={convertir.isPending}
                               onClick={async () => {
                                 try {
-                                  await aprobar.mutateAsync(c.id);
-                                  toast.success(`Cotizacion ${c.numero ?? ""} aprobada`);
+                                  const orden = await convertir.mutateAsync(c.id);
+                                  toast.success(`Orden ${orden.numero ?? ""} creada`);
+                                  navigate({ to: "/ordenes/$id", params: { id: orden.id } });
                                 } catch (err) {
-                                  toast.error(err instanceof ApiError ? err.message : "No se pudo aprobar");
+                                  toast.error(err instanceof ApiError ? err.message : "No se pudo convertir");
                                 }
                               }}
                             >
-                              {aprobar.isPending ? "Aprobando..." : "Aprobar cotizacion"}
+                              Convertir en orden
                             </Button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Sin acciones disponibles</span>
-                        )}
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sin acciones adicionales</span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

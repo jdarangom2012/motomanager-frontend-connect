@@ -131,9 +131,7 @@ function LoginPage() {
             </Button>
 
             <div className="flex items-center justify-between text-sm">
-              <button type="button" className="text-muted-foreground hover:text-foreground">
-                Olvide mi contrasena
-              </button>
+              <span className="text-muted-foreground">Solicita soporte al administrador</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <button type="button" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">

@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ErrorState } from "@/components/states";
-import { usePortalEstado, useSolicitarCitaPortal } from "@/lib/hooks";
+import { usePortalCitaEstado, usePortalEstado, usePortalServicios, useSolicitarCitaPortal } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { estadoLabel, formatDateTime } from "@/lib/format";
 
@@ -36,8 +37,11 @@ export const Route = createFileRoute("/portal")({
 function PortalPage() {
   const [placa, setPlaca] = useState("");
   const [numeroOrden, setNumeroOrden] = useState("");
-  const [consulta, setConsulta] = useState<{ placa?: string; numero_orden?: string } | null>(null);
+  const [celularConsulta, setCelularConsulta] = useState("");
+  const [consulta, setConsulta] = useState<{ placa?: string; numero_orden?: string; celular?: string } | null>(null);
   const estado = usePortalEstado(consulta);
+  const citaEstado = usePortalCitaEstado(consulta);
+  const servicios = usePortalServicios();
 
   const [cita, setCita] = useState({
     servicio_id: "",
@@ -50,12 +54,19 @@ function PortalPage() {
     observaciones: "",
   });
   const solicitar = useSolicitarCitaPortal();
+  const serviciosActivos = (servicios.data ?? []).filter((servicio) => servicio.is_active !== false);
+
+  function servicioLabel(servicio: (typeof serviciosActivos)[number]) {
+    const precio = servicio.precio_base ? Number(servicio.precio_base).toLocaleString("es-CO") : "0";
+    return `${servicio.nombre} - ${servicio.duracion_minutos ?? 60} min - $ ${precio}`;
+  }
 
   function buscar(e: React.FormEvent) {
     e.preventDefault();
     setConsulta({
       ...(placa ? { placa } : {}),
       ...(numeroOrden ? { numero_orden: numeroOrden } : {}),
+      ...(celularConsulta ? { celular: celularConsulta } : {}),
     });
   }
 
@@ -104,10 +115,10 @@ function PortalPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Consultar estado</CardTitle>
-              <CardDescription>Ingresa la placa o el numero de orden.</CardDescription>
+              <CardDescription>Ingresa la placa, numero de orden o celular usado al solicitar la cita.</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={buscar} className="grid gap-4 sm:grid-cols-3">
+              <form onSubmit={buscar} className="grid gap-4 sm:grid-cols-4">
                 <div className="grid gap-2">
                   <Label htmlFor="placa">Placa</Label>
                   <Input id="placa" value={placa} onChange={(e) => setPlaca(e.target.value.toUpperCase())} />
@@ -116,8 +127,16 @@ function PortalPage() {
                   <Label htmlFor="orden">Numero de orden</Label>
                   <Input id="orden" value={numeroOrden} onChange={(e) => setNumeroOrden(e.target.value)} />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="celular-consulta">Celular cita</Label>
+                  <Input
+                    id="celular-consulta"
+                    value={celularConsulta}
+                    onChange={(e) => setCelularConsulta(e.target.value)}
+                  />
+                </div>
                 <div className="flex items-end">
-                  <Button type="submit" className="w-full" disabled={!placa && !numeroOrden}>
+                  <Button type="submit" className="w-full" disabled={!placa && !numeroOrden && !celularConsulta}>
                     <Search className="mr-2 h-4 w-4" /> Consultar
                   </Button>
                 </div>
@@ -125,7 +144,7 @@ function PortalPage() {
             </CardContent>
           </Card>
 
-          {estado.isError && (
+          {estado.isError && citaEstado.isError && (
             <div className="mt-6">
               <ErrorState error={estado.error} onRetry={() => estado.refetch()} />
             </div>
@@ -136,9 +155,9 @@ function PortalPage() {
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <CardTitle className="text-base">Orden {data.orden_numero}</CardTitle>
+                    <CardTitle className="text-base">Estado de la moto</CardTitle>
                     <CardDescription>
-                      {data.motocicleta} - {data.placa}
+                      Orden {data.orden_numero} - {data.motocicleta} - {data.placa}
                     </CardDescription>
                   </div>
                   <Badge>{estadoLabel(data.estado_actual)}</Badge>
@@ -151,16 +170,19 @@ function PortalPage() {
                 </div>
 
                 {(data.timeline ?? []).length > 0 && (
-                  <ol className="space-y-4 border-l pl-4">
-                    {data.timeline!.map((t, i) => (
-                      <li key={i} className="relative">
-                        <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
-                        <p className="text-sm font-medium">{estadoLabel(t.estado)}</p>
-                        <p className="text-sm text-muted-foreground">{t.descripcion}</p>
-                        <p className="text-xs text-muted-foreground">{formatDateTime(t.fecha)}</p>
-                      </li>
-                    ))}
-                  </ol>
+                  <div>
+                    <p className="mb-3 text-sm font-medium">Avance del servicio</p>
+                    <ol className="space-y-4 border-l pl-4">
+                      {data.timeline!.map((t, i) => (
+                        <li key={i} className="relative">
+                          <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
+                          <p className="text-sm font-medium">{estadoLabel(t.estado)}</p>
+                          <p className="text-sm text-muted-foreground">{t.descripcion}</p>
+                          <p className="text-xs text-muted-foreground">{formatDateTime(t.fecha)}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 )}
 
                 {(data.adjuntos_visibles ?? []).length > 0 && (
@@ -182,28 +204,85 @@ function PortalPage() {
               </CardContent>
             </Card>
           )}
+
+          {citaEstado.data && (
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-base">Estado de la cita</CardTitle>
+                    <CardDescription>
+                      {citaEstado.data.motocicleta} - {citaEstado.data.placa}
+                    </CardDescription>
+                  </div>
+                  <Badge>{estadoLabel(citaEstado.data.estado)}</Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="text-muted-foreground">Cliente</p>
+                  <p className="font-medium">{citaEstado.data.cliente}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Servicio</p>
+                  <p className="font-medium">{citaEstado.data.servicio ?? "Sin servicio"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Fecha y hora</p>
+                  <p className="font-medium">
+                    {formatDateTime(citaEstado.data.fecha_inicio)} - {formatDateTime(citaEstado.data.fecha_fin)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Tecnico</p>
+                  <p className="font-medium">{citaEstado.data.tecnico ?? "Pendiente por asignar"}</p>
+                </div>
+                {!data && (
+                  <div className="rounded-md border border-dashed p-3 sm:col-span-2">
+                    <p className="font-medium">La moto aun no tiene orden de trabajo activa.</p>
+                    <p className="mt-1 text-muted-foreground">
+                      Cuando el taller cree la recepcion u orden, aqui aparecera el avance real del servicio que
+                      actualiza el tecnico.
+                    </p>
+                  </div>
+                )}
+                <p className="sm:col-span-2 text-muted-foreground">{citaEstado.data.mensaje}</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="cita">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Solicitar cita</CardTitle>
-              <CardDescription>
-                El catalogo de servicios no es publico en el contrato actual, por eso el identificador del servicio se
-                ingresa manualmente.
-              </CardDescription>
+              <CardDescription>Selecciona el servicio, la fecha y los datos de contacto.</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={enviarCita} className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2 sm:col-span-2">
-                  <Label htmlFor="servicio">ID de servicio *</Label>
-                  <Input
-                    id="servicio"
+                  <Label htmlFor="servicio">Servicio *</Label>
+                  <Select
                     value={cita.servicio_id}
-                    onChange={(e) => setCita({ ...cita, servicio_id: e.target.value })}
-                    placeholder="UUID del servicio"
-                    required
-                  />
+                    onValueChange={(servicio_id) => setCita({ ...cita, servicio_id })}
+                    disabled={servicios.isLoading || serviciosActivos.length === 0}
+                  >
+                    <SelectTrigger id="servicio">
+                      <SelectValue
+                        placeholder={servicios.isLoading ? "Cargando servicios..." : "Selecciona un servicio"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {serviciosActivos.map((servicio) => (
+                        <SelectItem key={servicio.id} value={servicio.id}>
+                          {servicioLabel(servicio)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {servicios.isError && (
+                    <p className="text-xs text-destructive">No se pudo cargar el catalogo de servicios.</p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="fecha">Fecha y hora *</Label>

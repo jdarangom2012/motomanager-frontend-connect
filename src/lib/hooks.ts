@@ -8,6 +8,10 @@ import type {
   DashboardReport,
   Diagnostico,
   DiagnosticoWrite,
+  EmailSendRequest,
+  EmailSent,
+  Empresa,
+  EmpresaWrite,
   Motocicleta,
   MotocicletaWrite,
   OrdenEstado,
@@ -29,14 +33,21 @@ import type {
   Pago,
   PagoWrite,
   FileGenerated,
+  Notificacion,
   ReportResult,
+  SearchResult,
   ExportacionContaiRequest,
   ServicioTaller,
+  ServicioTallerWrite,
   PortalEstado,
+  PortalCitaEstado,
   PortalCitaRequest,
   PortalCitaResponse,
   ConfiguracionEmpresa,
   ConfiguracionEmpresaWrite,
+  Cita,
+  CitaEstadoUpdate,
+  CitaWrite,
 } from "./types";
 
 const listOpts = { staleTime: 15_000, retry: false } as const;
@@ -140,15 +151,10 @@ export function useCreateCotizacion() {
   });
 }
 
-/**
- * El OpenAPI no expone un endpoint dedicado de aprobacion.
- * Se usa el unico existente: PATCH /cotizaciones/{id}/ (cotizaciones_partial_update).
- */
 export function useAprobarCotizacion() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      apiFetch<Cotizacion>(`/cotizaciones/${id}/aprobar/`, { method: "POST" }),
+    mutationFn: (id: string) => apiFetch<Cotizacion>(`/cotizaciones/${id}/aprobar/`, { method: "POST" }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cotizaciones"] }),
   });
 }
@@ -198,6 +204,64 @@ export function useTecnicos() {
     queryKey: ["tecnicos"],
     queryFn: () => apiFetch<Paginated<Tecnico>>("/tecnicos/", { query: { page_size: 100 } }),
     ...listOpts,
+  });
+}
+
+export function useEnviarCotizacionEmail() {
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body?: EmailSendRequest }) =>
+      apiFetch<EmailSent>(`/cotizaciones/${id}/enviar-email/`, { method: "POST", body: body ?? {} }),
+  });
+}
+
+export function useCitas(
+  filters: {
+    fecha_desde?: string | undefined;
+    fecha_hasta?: string | undefined;
+    tecnico_id?: string | undefined;
+    estado?: string | undefined;
+    page?: number;
+    page_size?: number;
+  } = {},
+) {
+  return useQuery({
+    queryKey: ["citas", filters],
+    queryFn: () =>
+      apiFetch<Paginated<Cita>>("/citas/", {
+        query: {
+          fecha_desde: filters.fecha_desde,
+          fecha_hasta: filters.fecha_hasta,
+          tecnico_id: filters.tecnico_id,
+          estado: filters.estado,
+          page: filters.page ?? 1,
+          page_size: filters.page_size ?? 100,
+        },
+      }),
+    ...listOpts,
+  });
+}
+
+export function useCreateCita() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CitaWrite) => apiFetch<Cita>("/citas/", { method: "POST", body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["citas"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUpdateCitaEstado() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: CitaEstadoUpdate }) =>
+      apiFetch<Cita>(`/citas/${id}/`, { method: "PATCH", body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["citas"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["notificaciones"] });
+    },
   });
 }
 
@@ -404,6 +468,39 @@ export function useReporteOperativo(
   });
 }
 
+export function useEnviarFacturaEmail() {
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body?: EmailSendRequest }) =>
+      apiFetch<EmailSent>(`/facturas/${id}/enviar-email/`, { method: "POST", body: body ?? {} }),
+  });
+}
+
+export function useGlobalSearch(q: string) {
+  return useQuery({
+    queryKey: ["global-search", q],
+    queryFn: () => apiFetch<SearchResult>("/search/", { query: { q } }),
+    enabled: q.trim().length >= 2,
+    retry: false,
+  });
+}
+
+export function useNotificaciones() {
+  return useQuery({
+    queryKey: ["notificaciones"],
+    queryFn: () => apiFetch<Paginated<Notificacion>>("/notificaciones/", { query: { page_size: 10 } }),
+    refetchInterval: 30_000,
+    retry: false,
+  });
+}
+
+export function useMarcarNotificacionLeida() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiFetch<Notificacion>(`/notificaciones/${id}/marcar-leida/`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notificaciones"] }),
+  });
+}
+
 export function useExportarContai() {
   return useMutation({
     mutationFn: (body: ExportacionContaiRequest) =>
@@ -416,6 +513,23 @@ export function useServiciosTaller() {
     queryKey: ["servicios-taller"],
     queryFn: () => apiFetch<ServicioTaller[]>("/servicios-taller/"),
     retry: false,
+  });
+}
+
+export function useCreateServicioTaller() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ServicioTallerWrite) => apiFetch<ServicioTaller>("/servicios-taller/", { method: "POST", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["servicios-taller"] }),
+  });
+}
+
+export function useUpdateServicioTaller() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: Partial<ServicioTallerWrite> }) =>
+      apiFetch<ServicioTaller>(`/servicios-taller/${id}/`, { method: "PATCH", body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["servicios-taller"] }),
   });
 }
 
@@ -439,6 +553,27 @@ export function useSolicitarCitaPortal() {
   });
 }
 
+export function usePortalCitaEstado(params: { placa?: string; celular?: string } | null) {
+  return useQuery({
+    queryKey: ["portal-cita-estado", params],
+    queryFn: () =>
+      apiFetch<PortalCitaEstado>("/portal/citas/estado/", {
+        auth: false,
+        query: { placa: params?.placa, celular: params?.celular },
+      }),
+    enabled: !!params && !!(params.placa || params.celular),
+    retry: false,
+  });
+}
+
+export function usePortalServicios() {
+  return useQuery({
+    queryKey: ["portal-servicios"],
+    queryFn: () => apiFetch<ServicioTaller[]>("/portal/servicios/", { auth: false }),
+    retry: false,
+  });
+}
+
 export function useConfiguracionEmpresa() {
   return useQuery({
     queryKey: ["configuracion-empresa"],
@@ -453,5 +588,15 @@ export function useUpdateConfiguracionEmpresa() {
     mutationFn: (body: ConfiguracionEmpresaWrite) =>
       apiFetch<ConfiguracionEmpresa>("/configuracion/empresa/", { method: "PATCH", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["configuracion-empresa"] }),
+  });
+}
+
+export function useUpdateEmpresaActiva() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: EmpresaWrite) => apiFetch<Empresa>("/empresas/active/", { method: "PATCH", body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["configuracion-empresa"] });
+    },
   });
 }

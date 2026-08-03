@@ -14,6 +14,17 @@ export type Empresa = {
   timezone: string;
 };
 
+export type EmpresaWrite = {
+  nombre?: string;
+  nit?: string | null;
+  ciudad?: string | null;
+  telefono?: string | null;
+  correo?: string | null;
+  logo_url?: string | null;
+  moneda?: string;
+  timezone?: string;
+};
+
 export type UserMe = {
   id: UUID;
   email: string;
@@ -236,6 +247,24 @@ export type Cita = {
   observaciones?: string | null;
 };
 
+export type CitaWrite = {
+  cliente_id: UUID;
+  motocicleta_id: UUID;
+  servicio_id: UUID;
+  tecnico_id: UUID;
+  fecha_inicio: string;
+  fecha_fin: string;
+  permitir_conflicto?: boolean;
+  observaciones?: string | null;
+};
+
+export type CitaEstadoUpdate = {
+  estado: "confirmada" | "cancelada" | "completada";
+  tecnico_id?: UUID | null;
+  permitir_conflicto?: boolean;
+  observaciones?: string | null;
+};
+
 export type DashboardReport = {
   ventas_mes?: number;
   motos_taller?: number;
@@ -415,9 +444,30 @@ export type PagoWrite = {
 
 export type FileGenerated = { file_url: string; filename: string; mime_type: string };
 
+export type EmailSendRequest = { email?: string; mensaje?: string };
+export type EmailSent = { destinatario: string; sent_count: number };
+
 export type ReportResult = {
   kpis?: Record<string, unknown>;
   rows?: Record<string, unknown>[];
+};
+
+export type SearchResult = {
+  clientes?: ClienteResumen[];
+  motocicletas?: MotocicletaResumen[];
+  ordenes?: OrdenTrabajo[];
+  repuestos?: Repuesto[];
+};
+
+export type Notificacion = {
+  id: UUID;
+  tipo: string;
+  titulo: string;
+  mensaje?: string | null;
+  entidad_tipo?: string | null;
+  entidad_id?: UUID | null;
+  leida: boolean;
+  created_at: string;
 };
 
 export type ExportacionContaiRequest = {
@@ -441,6 +491,19 @@ export type PortalCitaRequest = {
 
 export type PortalCitaResponse = { id: UUID; estado: string; mensaje: string };
 
+export type PortalCitaEstado = {
+  id: UUID;
+  placa: string;
+  motocicleta: string;
+  cliente: string;
+  servicio?: string | null;
+  tecnico?: string | null;
+  estado: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  mensaje: string;
+};
+
 export type PortalEstado = {
   orden_numero: string;
   placa: string;
@@ -454,8 +517,17 @@ export type PortalEstado = {
 export type ServicioTaller = {
   id: UUID;
   nombre: string;
+  descripcion?: string | null;
   duracion_minutos?: number;
   precio_base?: number;
+  is_active?: boolean;
+};
+
+export type ServicioTallerWrite = {
+  nombre: string;
+  descripcion?: string | null;
+  duracion_minutos: number;
+  precio_base?: number | string | null;
   is_active?: boolean;
 };
 

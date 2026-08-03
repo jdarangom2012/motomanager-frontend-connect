@@ -146,6 +146,41 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   return data as T;
 }
 
+export async function downloadProtectedFile(fileUrl: string): Promise<Blob> {
+  const url = new URL(fileUrl, getApiBase());
+
+  const doRequest = async (token: string | null) => {
+    const headers: Record<string, string> = { Accept: "*/*" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return fetch(url.toString(), { headers });
+  };
+
+  let response: Response;
+  try {
+    response = await doRequest(tokens.access);
+  } catch {
+    throw new ApiError(0, "network_error", `No se pudo descargar el archivo (${url.toString()}).`);
+  }
+
+  if (response.status === 401 && tokens.refresh) {
+    const newToken = await refreshAccessToken();
+    if (newToken) response = await doRequest(newToken);
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    const data = text ? safeJson(text) : null;
+    const payload = (data ?? {}) as { code?: string; message?: string; detail?: string };
+    throw new ApiError(
+      response.status,
+      payload.code ?? `http_${response.status}`,
+      payload.message ?? payload.detail ?? `Error ${response.status} descargando archivo`,
+    );
+  }
+
+  return response.blob();
+}
+
 function safeJson(text: string): unknown {
   try {
     return JSON.parse(text);

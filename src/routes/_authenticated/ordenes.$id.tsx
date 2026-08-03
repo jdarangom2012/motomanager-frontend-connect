@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/states";
 import { useCambiarEstadoOrden, useOrden } from "@/lib/hooks";
 import { estadoLabel, formatDateTime } from "@/lib/format";
-import { ORDEN_ESTADOS, type OrdenEstado } from "@/lib/types";
+import type { OrdenEstado } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 
 export const Route = createFileRoute("/_authenticated/ordenes/$id")({
@@ -24,6 +24,19 @@ export const Route = createFileRoute("/_authenticated/ordenes/$id")({
   }),
   component: OrdenDetallePage,
 });
+
+const TRANSICIONES: Record<OrdenEstado, OrdenEstado[]> = {
+  recibida: ["en_diagnostico", "cancelada"],
+  en_diagnostico: ["esperando_aprobacion", "cancelada"],
+  esperando_aprobacion: ["aprobada", "cancelada"],
+  aprobada: ["esperando_repuestos", "en_reparacion", "cancelada"],
+  esperando_repuestos: ["en_reparacion", "cancelada"],
+  en_reparacion: ["pruebas", "cancelada"],
+  pruebas: ["lista_para_entrega", "cancelada"],
+  lista_para_entrega: ["entregada", "cancelada"],
+  entregada: [],
+  cancelada: [],
+};
 
 function OrdenDetallePage() {
   const { id } = Route.useParams();
@@ -72,7 +85,7 @@ function OrdenDetallePage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {orden.cliente?.nombre} · {orden.motocicleta?.marca} {orden.motocicleta?.modelo} ·{" "}
-            {orden.tecnico?.nombre_visible ?? "Sin tecnico"}
+            {orden.tecnico?.nombre_visible ?? "Tecnico pendiente"}
           </p>
         </div>
         <Badge className="w-fit">{estadoLabel(orden.estado)}</Badge>
@@ -120,12 +133,15 @@ function OrdenDetallePage() {
                   onChange={(e) => setEstado(e.target.value as OrdenEstado)}
                 >
                   <option value="">Selecciona</option>
-                  {ORDEN_ESTADOS.filter((e) => e !== orden.estado).map((e) => (
+                  {TRANSICIONES[orden.estado]?.map((e) => (
                     <option key={e} value={e}>
                       {estadoLabel(e)}
                     </option>
                   ))}
                 </select>
+                {(TRANSICIONES[orden.estado]?.length ?? 0) === 0 && (
+                  <p className="text-xs text-muted-foreground">Esta orden ya esta en un estado final.</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Comentario</Label>

@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader } from "@/components/states";
 import { useExportarContai } from "@/lib/hooks";
-import { ApiError } from "@/lib/api";
+import { ApiError, downloadProtectedFile } from "@/lib/api";
 import type { ExportacionContaiRequest, FileGenerated } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/contai")({
@@ -41,13 +41,20 @@ function ContaiPage() {
   const [file, setFile] = useState<FileGenerated | null>(null);
   const exportar = useExportarContai();
 
+  async function openProtectedFile(result: FileGenerated) {
+    const blob = await downloadProtectedFile(result.file_url);
+    const blobUrl = window.URL.createObjectURL(new Blob([blob], { type: result.mime_type || "application/octet-stream" }));
+    window.open(blobUrl, "_blank", "noopener");
+    window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
       const result = await exportar.mutateAsync({ fecha_desde: desde, fecha_hasta: hasta, formato, tipo });
       setFile(result);
       toast.success("Exportacion generada");
-      if (result?.file_url) window.open(result.file_url, "_blank", "noopener");
+      if (result?.file_url) await openProtectedFile(result);
     } catch (err) {
       toast.error(err instanceof ApiError ? `${err.message} (HTTP ${err.status})` : "No se pudo generar la exportacion");
     }
@@ -116,10 +123,8 @@ function ContaiPage() {
                 <p className="truncate text-sm font-medium">{file.filename}</p>
                 <p className="text-xs text-muted-foreground">{file.mime_type}</p>
               </div>
-              <Button asChild variant="outline" size="sm">
-                <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                  <Download className="mr-2 h-4 w-4" /> Descargar
-                </a>
+              <Button type="button" variant="outline" size="sm" onClick={() => openProtectedFile(file)}>
+                <Download className="mr-2 h-4 w-4" /> Descargar
               </Button>
             </div>
           )}

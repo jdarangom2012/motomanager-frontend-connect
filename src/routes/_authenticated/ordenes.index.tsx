@@ -70,7 +70,7 @@ function OrdenesPage() {
                           </div>
                           <p className="truncate text-sm">{o.cliente?.nombre}</p>
                           <p className="truncate text-xs text-muted-foreground">
-                            {o.tecnico?.nombre_visible ?? "Sin tecnico"} · {formatDateTime(o.created_at)}
+                            {o.tecnico?.nombre_visible ?? "Tecnico pendiente"} · {formatDateTime(o.created_at)}
                           </p>
                         </CardContent>
                       </Card>

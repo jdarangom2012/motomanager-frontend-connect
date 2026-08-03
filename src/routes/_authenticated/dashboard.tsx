@@ -65,8 +65,8 @@ function DashboardPage() {
         subtitle="Resumen operativo y comercial del taller"
         actions={
           <>
-            <Button variant="outline" disabled={!d}>
-              Exportar
+            <Button variant="outline" asChild>
+              <Link to="/reportes">Ver reportes</Link>
             </Button>
             <Button asChild>
               <Link to="/recepcion">Nueva recepcion</Link>
@@ -147,7 +147,7 @@ function DashboardPage() {
                         <p className="truncate text-sm font-medium">{c.cliente?.nombre}</p>
                         <p className="truncate text-xs text-muted-foreground">
                           {c.motocicleta?.placa} · {c.servicio?.nombre ?? "Servicio"} ·{" "}
-                          {c.tecnico?.nombre_visible ?? "Sin tecnico"}
+                          {c.tecnico?.nombre_visible ?? "Tecnico pendiente"}
                         </p>
                       </div>
                       <Badge variant="secondary">{formatTime(c.fecha_inicio)}</Badge>

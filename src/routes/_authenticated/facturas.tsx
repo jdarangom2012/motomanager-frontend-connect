@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { FileDown, Plus, Wallet } from "lucide-react";
+import { FileDown, Mail, Plus, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,12 +22,13 @@ import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/
 import {
   useCreateFactura,
   useCreatePago,
+  useEnviarFacturaEmail,
   useFacturas,
   useGenerarPdfFactura,
   useOrdenes,
   usePagos,
 } from "@/lib/hooks";
-import { ApiError } from "@/lib/api";
+import { ApiError, downloadProtectedFile } from "@/lib/api";
 import { estadoLabel, formatDateTime, formatMoney } from "@/lib/format";
 import type { PagoMetodo } from "@/lib/types";
 
@@ -68,6 +69,7 @@ function FacturasPage() {
   const createFactura = useCreateFactura();
   const createPago = useCreatePago();
   const generarPdf = useGenerarPdfFactura();
+  const enviarEmail = useEnviarFacturaEmail();
 
   const items = facturas.data?.results ?? [];
   const pagosItems = pagos.data?.results ?? [];
@@ -109,10 +111,24 @@ function FacturasPage() {
   async function pdf(id: string) {
     try {
       const file = await generarPdf.mutateAsync(id);
+      if (file?.file_url) {
+        const blob = await downloadProtectedFile(file.file_url);
+        const blobUrl = window.URL.createObjectURL(new Blob([blob], { type: file.mime_type || "application/pdf" }));
+        window.open(blobUrl, "_blank", "noopener");
+        window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60_000);
+      }
       toast.success("PDF generado");
-      if (file?.file_url) window.open(file.file_url, "_blank", "noopener");
     } catch (err) {
       toast.error(err instanceof ApiError ? `${err.message} (HTTP ${err.status})` : "No se pudo generar el PDF");
+    }
+  }
+
+  async function emailFactura(id: string) {
+    try {
+      const result = await enviarEmail.mutateAsync({ id });
+      toast.success(`Factura enviada a ${result.destinatario}`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? `${err.message} (HTTP ${err.status})` : "No se pudo enviar el correo");
     }
   }
 
@@ -241,6 +257,14 @@ function FacturasPage() {
                           <div className="flex justify-end gap-2">
                             <Button size="sm" variant="outline" onClick={() => pdf(f.id)} disabled={generarPdf.isPending}>
                               <FileDown className="mr-1 h-3.5 w-3.5" /> PDF
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => emailFactura(f.id)}
+                              disabled={enviarEmail.isPending}
+                            >
+                              <Mail className="mr-1 h-3.5 w-3.5" /> Email
                             </Button>
                             <Button size="sm" onClick={() => abrirPago(f.id)} disabled={Number(f.saldo) <= 0}>
                               <Wallet className="mr-1 h-3.5 w-3.5" /> Pago
