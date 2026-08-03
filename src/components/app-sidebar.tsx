@@ -45,7 +45,12 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   {
     label: "Operacion",
     items: [
-      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["administrador", "recepcionista"] },
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+        roles: ["administrador", "recepcionista", "tecnico", "asesor", "inventario", "contador"],
+      },
       { title: "Agenda de taller", url: "/agenda", icon: CalendarDays, roles: ["administrador", "recepcionista", "tecnico"] },
       { title: "Recepcion", url: "/recepcion", icon: ClipboardList, roles: ["administrador", "recepcionista"] },
       { title: "Ordenes de trabajo", url: "/ordenes", icon: Wrench, roles: ["administrador", "recepcionista", "tecnico", "asesor"] },

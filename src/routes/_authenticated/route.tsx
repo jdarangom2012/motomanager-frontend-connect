@@ -96,7 +96,7 @@ function SearchItem({ label, detail, onClick }: { label: string; detail?: string
 }
 
 function AuthenticatedLayout() {
-  const { user, ready, isAuthenticated, logout } = useAuth();
+  const { user, ready, isAuthenticated, logout, hasRole } = useAuth();
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState("");
@@ -135,6 +135,7 @@ function AuthenticatedLayout() {
 
   const initials = (user?.full_name || user?.email || "U").slice(0, 2).toUpperCase();
   const unreadCount = notificaciones.data?.results.filter((n) => !n.leida).length ?? 0;
+  const canCreateReception = hasRole(["administrador", "recepcionista"]);
   const hasSearchResults =
     (searchResults.data?.clientes?.length ?? 0) +
       (searchResults.data?.motocicletas?.length ?? 0) +
@@ -303,12 +304,21 @@ function AuthenticatedLayout() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button size="icon" onClick={() => navigate({ to: "/recepcion" })} className="sm:hidden" aria-label="Nueva recepcion">
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button size="sm" onClick={() => navigate({ to: "/recepcion" })} className="hidden sm:inline-flex">
-                <Plus className="mr-1 h-4 w-4" /> Nueva recepcion
-              </Button>
+              {canCreateReception && (
+                <>
+                  <Button
+                    size="icon"
+                    onClick={() => navigate({ to: "/recepcion" })}
+                    className="sm:hidden"
+                    aria-label="Nueva recepcion"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" onClick={() => navigate({ to: "/recepcion" })} className="hidden sm:inline-flex">
+                    <Plus className="mr-1 h-4 w-4" /> Nueva recepcion
+                  </Button>
+                </>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="rounded-full text-xs font-semibold">
