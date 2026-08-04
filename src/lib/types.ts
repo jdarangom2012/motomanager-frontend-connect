@@ -60,6 +60,7 @@ export type ClienteWrite = {
   celular?: string | null;
   correo?: string | null;
   observaciones?: string | null;
+  is_active?: boolean;
 };
 
 export type MotocicletaResumen = { id: UUID; placa: string; marca: string; modelo: string };
@@ -87,6 +88,7 @@ export type MotocicletaWrite = {
   motor?: string | null;
   kilometraje_actual?: number | null;
   observaciones?: string | null;
+  is_active?: boolean;
 };
 
 export type ChecklistEstado = "ok" | "falla" | "no_aplica" | "no_revisado";
@@ -312,6 +314,7 @@ export type ProveedorWrite = {
   telefono?: string | null;
   correo?: string | null;
   contacto?: string | null;
+  is_active?: boolean;
 };
 
 export type Repuesto = {
@@ -328,6 +331,7 @@ export type Repuesto = {
   stock: number;
   stock_minimo: number;
   stock_bajo?: boolean;
+  is_active?: boolean;
 };
 
 export type RepuestoWrite = {
@@ -344,6 +348,7 @@ export type RepuestoWrite = {
   stock?: number;
   stock_minimo?: number;
   ubicacion?: string | null;
+  is_active?: boolean;
 };
 
 export type RepuestoCompatibilidad = {
@@ -467,6 +472,15 @@ export type Notificacion = {
   entidad_tipo?: string | null;
   entidad_id?: UUID | null;
   leida: boolean;
+  created_at: string;
+};
+
+export type Auditoria = {
+  id: UUID;
+  usuario?: string | null;
+  accion: string;
+  entidad_tipo: string;
+  entidad_id?: UUID | null;
   created_at: string;
 };
 

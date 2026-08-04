@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import {
   useClientes,
@@ -47,10 +48,11 @@ const ESTADOS: ChecklistEstado[] = ["ok", "falla", "no_aplica", "no_revisado"];
 
 function RecepcionPage() {
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
   const clientes = useClientes("");
   const motos = useMotocicletas("");
   const tecnicos = useTecnicos();
-  const recepciones = useRecepciones();
+  const recepciones = useRecepciones(page);
   const create = useCreateRecepcion();
   const convertir = useConvertirRecepcionEnOrden();
 
@@ -276,6 +278,12 @@ function RecepcionPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <PaginationControls
+                  data={recepciones.data}
+                  page={page}
+                  onPageChange={setPage}
+                  isLoading={recepciones.isFetching}
+                />
               </div>
             )}
           </CardContent>

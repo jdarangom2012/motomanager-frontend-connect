@@ -34,6 +34,7 @@ import type {
   PagoWrite,
   FileGenerated,
   Notificacion,
+  Auditoria,
   ReportResult,
   SearchResult,
   ExportacionContaiRequest,
@@ -76,6 +77,18 @@ export function useCreateCliente() {
   });
 }
 
+export function useUpdateCliente() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: Partial<ClienteWrite> }) =>
+      apiFetch<Cliente>(`/clientes/${id}/`, { method: "PATCH", body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["clientes"] });
+      qc.invalidateQueries({ queryKey: ["auditoria"] });
+    },
+  });
+}
+
 export function useMotocicletas(search: string, page = 1) {
   return useQuery({
     queryKey: ["motocicletas", search, page],
@@ -89,6 +102,18 @@ export function useCreateMotocicleta() {
   return useMutation({
     mutationFn: (body: MotocicletaWrite) => apiFetch<Motocicleta>("/motocicletas/", { method: "POST", body }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["motocicletas"] }),
+  });
+}
+
+export function useUpdateMotocicleta() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: Partial<MotocicletaWrite> }) =>
+      apiFetch<Motocicleta>(`/motocicletas/${id}/`, { method: "PATCH", body }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["motocicletas"] });
+      qc.invalidateQueries({ queryKey: ["auditoria"] });
+    },
   });
 }
 
@@ -282,6 +307,7 @@ export function useCreateTecnico() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tecnicos-list"] });
       qc.invalidateQueries({ queryKey: ["tecnicos"] });
+      qc.invalidateQueries({ queryKey: ["auditoria"] });
     },
   });
 }
@@ -490,6 +516,21 @@ export function useNotificaciones() {
     queryFn: () => apiFetch<Paginated<Notificacion>>("/notificaciones/", { query: { page_size: 10 } }),
     refetchInterval: 30_000,
     retry: false,
+  });
+}
+
+export function useAuditoria(filters: { entidad_tipo?: string; page?: number; page_size?: number } = {}) {
+  return useQuery({
+    queryKey: ["auditoria", filters],
+    queryFn: () =>
+      apiFetch<Paginated<Auditoria>>("/auditoria/", {
+        query: {
+          entidad_tipo: filters.entidad_tipo,
+          page: filters.page ?? 1,
+          page_size: filters.page_size ?? 50,
+        },
+      }),
+    ...listOpts,
   });
 }
 

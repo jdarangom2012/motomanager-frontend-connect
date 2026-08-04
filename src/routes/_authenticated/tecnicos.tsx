@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Edit2, Plus, Power, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +17,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import { useCreateTecnico, useTecnicosList, useUpdateTecnico } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
-import type { TecnicoWrite } from "@/lib/types";
+import type { Tecnico, TecnicoWrite } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/tecnicos")({
   ssr: false,
@@ -54,28 +56,61 @@ function initials(name: string) {
 
 function TecnicosPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Tecnico | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Tecnico | null>(null);
   const [form, setForm] = useState<TecnicoWrite>(EMPTY);
-  const query = useTecnicosList(search);
+  const query = useTecnicosList(search, page);
   const create = useCreateTecnico();
   const update = useUpdateTecnico();
+
+  function resetForm() {
+    setEditing(null);
+    setForm(EMPTY);
+  }
+
+  function openCreate() {
+    resetForm();
+    setOpen(true);
+  }
+
+  function openEdit(tecnico: Tecnico) {
+    setEditing(tecnico);
+    setForm({
+      nombre_visible: tecnico.nombre_visible,
+      rol_operativo: tecnico.rol_operativo as TecnicoWrite["rol_operativo"],
+      especialidad: tecnico.especialidad ?? "",
+      is_assignable: tecnico.is_assignable ?? true,
+      is_active: tecnico.is_active ?? true,
+    });
+    setOpen(true);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await create.mutateAsync({ ...form, especialidad: form.especialidad || null });
-      toast.success("Integrante guardado");
+      const body = { ...form, especialidad: form.especialidad || null };
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, body });
+        toast.success("Integrante actualizado");
+      } else {
+        await create.mutateAsync(body);
+        toast.success("Integrante guardado");
+      }
       setOpen(false);
-      setForm(EMPTY);
+      resetForm();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo crear el integrante");
+      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el integrante");
     }
   }
 
-  async function toggleActive(id: string, value: boolean) {
+  async function toggleActive(tecnico: Tecnico) {
+    const next = !tecnico.is_active;
     try {
-      await update.mutateAsync({ id, body: { is_active: value } });
-      toast.success(value ? "Integrante activado" : "Integrante inactivado");
+      await update.mutateAsync({ id: tecnico.id, body: { is_active: next } });
+      toast.success(next ? "Integrante activado" : "Integrante inactivado");
+      setConfirmTarget(null);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No se pudo actualizar");
     }
@@ -89,15 +124,21 @@ function TecnicosPage() {
         title="Equipo del taller"
         subtitle="Administra tecnicos, recepcionistas y asignaciones."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openCreate}>
                 <Plus className="mr-2 h-4 w-4" /> Nuevo integrante
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nuevo integrante</DialogTitle>
+                <DialogTitle>{editing ? "Editar integrante" : "Nuevo integrante"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={submit} className="grid gap-4">
                 <div className="grid gap-2">
@@ -145,8 +186,8 @@ function TecnicosPage() {
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={!form.nombre_visible || create.isPending}>
-                    {create.isPending ? "Guardando..." : "Guardar"}
+                  <Button type="submit" disabled={!form.nombre_visible || create.isPending || update.isPending}>
+                    {create.isPending || update.isPending ? "Guardando..." : editing ? "Guardar cambios" : "Guardar"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -161,7 +202,10 @@ function TecnicosPage() {
           className="pl-9"
           placeholder="Buscar integrante"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
       </div>
 
@@ -198,25 +242,53 @@ function TecnicosPage() {
                 <div className="flex justify-between text-muted-foreground">
                   <span>Calificacion</span>
                   <span className="font-medium text-foreground">
-                    {t.calificacion != null ? t.calificacion.toFixed(1) : "-"}
+                    {t.calificacion != null && Number.isFinite(Number(t.calificacion))
+                      ? Number(t.calificacion).toFixed(1)
+                      : "-"}
                   </span>
                 </div>
-                <div className="flex items-center justify-between border-t pt-3">
-                  <Label htmlFor={`act-${t.id}`} className="text-xs text-muted-foreground">
-                    Activo
-                  </Label>
-                  <Switch
-                    id={`act-${t.id}`}
-                    checked={t.is_active !== false}
-                    disabled={update.isPending}
-                    onCheckedChange={(v) => toggleActive(t.id, v)}
-                  />
+                <div className="flex items-center justify-between gap-2 border-t pt-3">
+                  <Badge variant={t.is_active === false ? "destructive" : "secondary"}>
+                    {t.is_active === false ? "Inactivo" : "Activo"}
+                  </Badge>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => openEdit(t)}>
+                      <Edit2 className="h-4 w-4" /> Editar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={t.is_active === false ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => setConfirmTarget(t)}
+                      disabled={update.isPending}
+                    >
+                      <Power className="h-4 w-4" />
+                      {t.is_active === false ? "Activar" : "Inactivar"}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
+          <div className="sm:col-span-2 xl:col-span-3">
+            <PaginationControls data={query.data} page={page} onPageChange={setPage} isLoading={query.isFetching} />
+          </div>
         </div>
       )}
+      <ConfirmActionDialog
+        open={!!confirmTarget}
+        onOpenChange={(value) => !value && setConfirmTarget(null)}
+        title={confirmTarget?.is_active === false ? "Activar integrante" : "Inactivar integrante"}
+        description={
+          confirmTarget?.is_active === false
+            ? `El integrante ${confirmTarget?.nombre_visible ?? ""} volvera a estar disponible en el equipo del taller.`
+            : `El integrante ${confirmTarget?.nombre_visible ?? ""} quedara fuera de nuevas asignaciones, pero se conserva su historial.`
+        }
+        confirmLabel={confirmTarget?.is_active === false ? "Activar integrante" : "Inactivar integrante"}
+        destructive={confirmTarget?.is_active !== false}
+        isPending={update.isPending}
+        onConfirm={() => confirmTarget && toggleActive(confirmTarget)}
+      />
     </div>
   );
 }

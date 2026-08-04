@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Edit2, Plus, Power, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog";
+import { PaginationControls } from "@/components/pagination-controls";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
-import { useCompatibilidades, useCreateRepuesto, useProveedores, useRepuestos } from "@/lib/hooks";
+import { useCompatibilidades, useCreateRepuesto, useProveedores, useRepuestos, useUpdateRepuesto } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
-import type { RepuestoWrite } from "@/lib/types";
+import type { Repuesto, RepuestoWrite } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/inventario")({
   ssr: false,
@@ -49,31 +51,80 @@ const EMPTY: RepuestoWrite = {
 
 function InventarioPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [soloBajo, setSoloBajo] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Repuesto | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Repuesto | null>(null);
   const [form, setForm] = useState<RepuestoWrite>(EMPTY);
   const [detalleId, setDetalleId] = useState<string | null>(null);
 
-  const query = useRepuestos(search, { stock_bajo: soloBajo });
+  const query = useRepuestos(search, { stock_bajo: soloBajo, page });
   const proveedores = useProveedores("");
   const create = useCreateRepuesto();
+  const update = useUpdateRepuesto();
   const compat = useCompatibilidades(detalleId ?? undefined);
+
+  function resetForm() {
+    setEditing(null);
+    setForm(EMPTY);
+  }
+
+  function openCreate() {
+    resetForm();
+    setOpen(true);
+  }
+
+  function openEdit(repuesto: Repuesto) {
+    setEditing(repuesto);
+    setForm({
+      proveedor_id: repuesto.proveedor?.id,
+      codigo_interno: repuesto.codigo_interno,
+      referencia_fabricante: repuesto.referencia_fabricante ?? "",
+      codigo_barras: repuesto.codigo_barras ?? "",
+      nombre: repuesto.nombre,
+      marca: repuesto.marca ?? "",
+      categoria: repuesto.categoria ?? "",
+      costo: repuesto.costo,
+      precio: repuesto.precio,
+      stock: repuesto.stock,
+      stock_minimo: repuesto.stock_minimo,
+    });
+    setOpen(true);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    const body = {
+      ...form,
+      costo: Number(form.costo),
+      precio: Number(form.precio),
+      stock: Number(form.stock ?? 0),
+      stock_minimo: Number(form.stock_minimo ?? 0),
+    };
     try {
-      await create.mutateAsync({
-        ...form,
-        costo: Number(form.costo),
-        precio: Number(form.precio),
-        stock: Number(form.stock ?? 0),
-        stock_minimo: Number(form.stock_minimo ?? 0),
-      });
-      toast.success("Repuesto creado");
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, body });
+        toast.success("Repuesto actualizado");
+      } else {
+        await create.mutateAsync(body);
+        toast.success("Repuesto creado");
+      }
       setOpen(false);
-      setForm(EMPTY);
+      resetForm();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo crear el repuesto");
+      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el repuesto");
+    }
+  }
+
+  async function toggleActive(repuesto: Repuesto) {
+    const next = !repuesto.is_active;
+    try {
+      await update.mutateAsync({ id: repuesto.id, body: { is_active: next } });
+      toast.success(next ? "Repuesto activado" : "Repuesto inactivado");
+      setConfirmTarget(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo cambiar el estado del repuesto");
     }
   }
 
@@ -85,15 +136,21 @@ function InventarioPage() {
         title="Inventario"
         subtitle="Controla stock, costos y precios de los repuestos del taller."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openCreate}>
                 <Plus className="mr-2 h-4 w-4" /> Nuevo repuesto
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
-                <DialogTitle>Nuevo repuesto</DialogTitle>
+                <DialogTitle>{editing ? "Editar repuesto" : "Nuevo repuesto"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
@@ -202,9 +259,9 @@ function InventarioPage() {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={!form.codigo_interno || !form.nombre || create.isPending}
+                    disabled={!form.codigo_interno || !form.nombre || create.isPending || update.isPending}
                   >
-                    {create.isPending ? "Guardando..." : "Guardar"}
+                    {create.isPending || update.isPending ? "Guardando..." : editing ? "Guardar cambios" : "Guardar"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -220,10 +277,19 @@ function InventarioPage() {
             className="pl-9"
             placeholder="Buscar por codigo o nombre"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
-        <Button variant={soloBajo ? "default" : "outline"} onClick={() => setSoloBajo(!soloBajo)}>
+        <Button
+          variant={soloBajo ? "default" : "outline"}
+          onClick={() => {
+            setSoloBajo(!soloBajo);
+            setPage(1);
+          }}
+        >
           Stock bajo
         </Button>
       </div>
@@ -246,6 +312,7 @@ function InventarioPage() {
                   <TableHead className="hidden lg:table-cell">Costo</TableHead>
                   <TableHead>Precio</TableHead>
                   <TableHead>Stock</TableHead>
+                  <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -267,15 +334,36 @@ function InventarioPage() {
                         {r.stock} / min {r.stock_minimo}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant={r.is_active === false ? "destructive" : "secondary"}>
+                        {r.is_active === false ? "Inactivo" : "Activo"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => setDetalleId(r.id)}>
-                        Compatibilidad
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setDetalleId(r.id)}>
+                          Compatibilidad
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => openEdit(r)}>
+                          <Edit2 className="h-4 w-4" /> Editar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={r.is_active === false ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => setConfirmTarget(r)}
+                          disabled={update.isPending}
+                        >
+                          <Power className="h-4 w-4" />
+                          {r.is_active === false ? "Activar" : "Inactivar"}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <PaginationControls data={query.data} page={page} onPageChange={setPage} isLoading={query.isFetching} />
           </CardContent>
         </Card>
       )}
@@ -308,6 +396,20 @@ function InventarioPage() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmActionDialog
+        open={!!confirmTarget}
+        onOpenChange={(value) => !value && setConfirmTarget(null)}
+        title={confirmTarget?.is_active === false ? "Activar repuesto" : "Inactivar repuesto"}
+        description={
+          confirmTarget?.is_active === false
+            ? `El repuesto ${confirmTarget?.nombre ?? ""} volvera a estar disponible en inventario y cotizaciones.`
+            : `El repuesto ${confirmTarget?.nombre ?? ""} quedara fuera de nuevos movimientos, conservando stock e historial.`
+        }
+        confirmLabel={confirmTarget?.is_active === false ? "Activar repuesto" : "Inactivar repuesto"}
+        destructive={confirmTarget?.is_active !== false}
+        isPending={update.isPending}
+        onConfirm={() => confirmTarget && toggleActive(confirmTarget)}
+      />
     </div>
   );
 }

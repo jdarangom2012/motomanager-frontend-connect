@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import {
   useCreateFactura,
@@ -53,6 +54,8 @@ const METODOS: PagoMetodo[] = ["efectivo", "transferencia", "nequi", "daviplata"
 function FacturasPage() {
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
+  const [facturasPage, setFacturasPage] = useState(1);
+  const [pagosPage, setPagosPage] = useState(1);
   const [openFactura, setOpenFactura] = useState(false);
   const [ordenId, setOrdenId] = useState("");
   const [observaciones, setObservaciones] = useState("");
@@ -63,8 +66,12 @@ function FacturasPage() {
   const [valor, setValor] = useState("");
   const [referencia, setReferencia] = useState("");
 
-  const facturas = useFacturas({ fecha_desde: desde || undefined, fecha_hasta: hasta || undefined });
-  const pagos = usePagos({ fecha_desde: desde || undefined, fecha_hasta: hasta || undefined });
+  const facturas = useFacturas({
+    fecha_desde: desde || undefined,
+    fecha_hasta: hasta || undefined,
+    page: facturasPage,
+  });
+  const pagos = usePagos({ fecha_desde: desde || undefined, fecha_hasta: hasta || undefined, page: pagosPage });
   const ordenes = useOrdenes("");
   const createFactura = useCreateFactura();
   const createPago = useCreatePago();
@@ -198,13 +205,31 @@ function FacturasPage() {
           <Label htmlFor="desde" className="text-xs text-muted-foreground">
             Desde
           </Label>
-          <Input id="desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          <Input
+            id="desde"
+            type="date"
+            value={desde}
+            onChange={(e) => {
+              setDesde(e.target.value);
+              setFacturasPage(1);
+              setPagosPage(1);
+            }}
+          />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="hasta" className="text-xs text-muted-foreground">
             Hasta
           </Label>
-          <Input id="hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          <Input
+            id="hasta"
+            type="date"
+            value={hasta}
+            onChange={(e) => {
+              setHasta(e.target.value);
+              setFacturasPage(1);
+              setPagosPage(1);
+            }}
+          />
         </div>
       </div>
 
@@ -275,6 +300,12 @@ function FacturasPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <PaginationControls
+                  data={facturas.data}
+                  page={facturasPage}
+                  onPageChange={setFacturasPage}
+                  isLoading={facturas.isFetching}
+                />
               </CardContent>
             </Card>
           )}
@@ -314,6 +345,12 @@ function FacturasPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <PaginationControls
+                  data={pagos.data}
+                  page={pagosPage}
+                  onPageChange={setPagosPage}
+                  isLoading={pagos.isFetching}
+                />
               </CardContent>
             </Card>
           )}

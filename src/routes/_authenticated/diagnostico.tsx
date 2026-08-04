@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import { useCreateDiagnostico, useDiagnosticos, useRecepciones, useTecnicos } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -24,9 +25,10 @@ export const Route = createFileRoute("/_authenticated/diagnostico")({
 });
 
 function DiagnosticoPage() {
+  const [page, setPage] = useState(1);
   const recepciones = useRecepciones();
   const tecnicos = useTecnicos();
-  const diagnosticos = useDiagnosticos();
+  const diagnosticos = useDiagnosticos(page);
   const create = useCreateDiagnostico();
 
   const [recepcionId, setRecepcionId] = useState("");
@@ -146,6 +148,12 @@ function DiagnosticoPage() {
                 </div>
               ))
             )}
+            <PaginationControls
+              data={diagnosticos.data}
+              page={page}
+              onPageChange={setPage}
+              isLoading={diagnosticos.isFetching}
+            />
           </CardContent>
         </Card>
       </div>

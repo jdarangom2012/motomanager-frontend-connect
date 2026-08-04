@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Edit2, Plus, Power, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
@@ -15,9 +16,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
-import { useClientes, useCreateMotocicleta, useMotocicletas } from "@/lib/hooks";
+import { useClientes, useCreateMotocicleta, useMotocicletas, useUpdateMotocicleta } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import type { Motocicleta } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/motocicletas")({
   ssr: false,
@@ -32,10 +36,14 @@ export const Route = createFileRoute("/_authenticated/motocicletas")({
 
 function MotocicletasPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
-  const query = useMotocicletas(search);
+  const [editing, setEditing] = useState<Motocicleta | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Motocicleta | null>(null);
+  const query = useMotocicletas(search, page);
   const clientes = useClientes("");
   const create = useCreateMotocicleta();
+  const update = useUpdateMotocicleta();
 
   const [form, setForm] = useState({
     cliente_id: "",
@@ -48,10 +56,44 @@ function MotocicletasPage() {
     kilometraje_actual: "",
   });
 
+  function resetForm() {
+    setEditing(null);
+    setForm({
+      cliente_id: "",
+      placa: "",
+      marca: "",
+      modelo: "",
+      anio: "",
+      cilindraje: "",
+      color: "",
+      kilometraje_actual: "",
+    });
+  }
+
+  function openCreate() {
+    resetForm();
+    setOpen(true);
+  }
+
+  function openEdit(moto: Motocicleta) {
+    setEditing(moto);
+    setForm({
+      cliente_id: moto.cliente?.id ?? "",
+      placa: moto.placa ?? "",
+      marca: moto.marca ?? "",
+      modelo: moto.modelo ?? "",
+      anio: moto.anio ? String(moto.anio) : "",
+      cilindraje: moto.cilindraje ?? "",
+      color: moto.color ?? "",
+      kilometraje_actual: moto.kilometraje_actual ? String(moto.kilometraje_actual) : "",
+    });
+    setOpen(true);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await create.mutateAsync({
+      const body = {
         cliente_id: form.cliente_id,
         placa: form.placa.toUpperCase(),
         marca: form.marca,
@@ -60,11 +102,29 @@ function MotocicletasPage() {
         cilindraje: form.cilindraje || null,
         color: form.color || null,
         kilometraje_actual: form.kilometraje_actual ? Number(form.kilometraje_actual) : null,
-      });
-      toast.success("Motocicleta registrada");
+      };
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, body });
+        toast.success("Motocicleta actualizada");
+      } else {
+        await create.mutateAsync(body);
+        toast.success("Motocicleta registrada");
+      }
       setOpen(false);
+      resetForm();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo registrar la motocicleta");
+      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar la motocicleta");
+    }
+  }
+
+  async function toggleActive(moto: Motocicleta) {
+    const next = !moto.is_active;
+    try {
+      await update.mutateAsync({ id: moto.id, body: { is_active: next } });
+      toast.success(next ? "Motocicleta activada" : "Motocicleta inactivada");
+      setConfirmTarget(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo cambiar el estado de la motocicleta");
     }
   }
 
@@ -74,15 +134,21 @@ function MotocicletasPage() {
         title="Motocicletas"
         subtitle="Parque de motos asociado a los clientes"
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openCreate}>
                 <Plus className="mr-1 h-4 w-4" /> Nueva motocicleta
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nueva motocicleta</DialogTitle>
+                <DialogTitle>{editing ? "Editar motocicleta" : "Nueva motocicleta"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5 sm:col-span-2">
@@ -145,7 +211,10 @@ function MotocicletasPage() {
               className="pl-9"
               placeholder="Buscar por placa o cliente"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
 
@@ -165,6 +234,8 @@ function MotocicletasPage() {
                     <TableHead>Cliente</TableHead>
                     <TableHead>Anio</TableHead>
                     <TableHead className="text-right">Km</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -177,14 +248,51 @@ function MotocicletasPage() {
                       <TableCell>{m.cliente?.nombre ?? "-"}</TableCell>
                       <TableCell>{m.anio ?? "-"}</TableCell>
                       <TableCell className="text-right">{m.kilometraje_actual ?? "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant={m.is_active === false ? "destructive" : "secondary"}>
+                          {m.is_active === false ? "Inactiva" : "Activa"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => openEdit(m)}>
+                            <Edit2 className="h-4 w-4" /> Editar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={m.is_active === false ? "secondary" : "outline"}
+                            size="sm"
+                            onClick={() => setConfirmTarget(m)}
+                            disabled={update.isPending}
+                          >
+                            <Power className="h-4 w-4" />
+                            {m.is_active === false ? "Activar" : "Inactivar"}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              <PaginationControls data={query.data} page={page} onPageChange={setPage} isLoading={query.isFetching} />
             </div>
           )}
         </CardContent>
       </Card>
+      <ConfirmActionDialog
+        open={!!confirmTarget}
+        onOpenChange={(value) => !value && setConfirmTarget(null)}
+        title={confirmTarget?.is_active === false ? "Activar motocicleta" : "Inactivar motocicleta"}
+        description={
+          confirmTarget?.is_active === false
+            ? `La motocicleta ${confirmTarget?.placa ?? ""} volvera a estar disponible para recepciones, citas y ordenes.`
+            : `La motocicleta ${confirmTarget?.placa ?? ""} quedara fuera de nuevos procesos, pero se conserva todo su historial.`
+        }
+        confirmLabel={confirmTarget?.is_active === false ? "Activar motocicleta" : "Inactivar motocicleta"}
+        destructive={confirmTarget?.is_active !== false}
+        isPending={update.isPending}
+        onConfirm={() => confirmTarget && toggleActive(confirmTarget)}
+      />
     </div>
   );
 }

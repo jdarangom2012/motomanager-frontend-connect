@@ -17,6 +17,7 @@ import {
   Wrench,
   LayoutDashboard,
   Globe,
+  History,
 } from "lucide-react";
 import {
   Sidebar,
@@ -80,7 +81,10 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "Sistema",
-    items: [{ title: "Configuracion", url: "/configuracion", icon: Cog, roles: ["administrador"] }],
+    items: [
+      { title: "Configuracion", url: "/configuracion", icon: Cog, roles: ["administrador"] },
+      { title: "Auditoria", url: "/auditoria", icon: History, roles: ["administrador"] },
+    ],
   },
 ];
 
@@ -97,7 +101,7 @@ export function AppSidebar() {
           <img
             src="/assets/brand/LogoMotoManager.png"
             alt="MotoManager"
-            className={collapsed ? "h-8 w-8 object-cover object-left" : "h-8 w-auto object-contain"}
+            className={collapsed ? "h-10 w-10 object-cover object-left" : "h-auto w-[190px] max-w-full object-contain"}
           />
         </div>
         {!collapsed && (
@@ -149,14 +153,22 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border py-4">
         {!collapsed && (
-          <div className="px-2">
+          <div className="flex flex-col items-center px-2 text-center">
             <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">Desarrollado por</p>
-            <img
-              src="/assets/brand/LogoNautilusTech.png"
-              alt="NautilusTech"
-              loading="lazy"
-              className="mt-1 h-6 w-auto object-contain opacity-80 brightness-0 invert"
-            />
+            <a
+              href="https://nautilustech.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Abrir sitio web de NautilusTech"
+              className="mt-2 inline-flex justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
+              <img
+                src="/assets/brand/LogoNautilusTech.png"
+                alt="NautilusTech"
+                loading="lazy"
+                className="h-24 w-24 rounded-sm object-contain opacity-95 transition-opacity hover:opacity-100"
+              />
+            </a>
           </div>
         )}
       </SidebarFooter>

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Edit2, Plus, Power, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
-import { useClientes, useCreateCliente } from "@/lib/hooks";
+import { useClientes, useCreateCliente, useUpdateCliente } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
+import type { Cliente } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   ssr: false,
@@ -32,9 +35,13 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 
 function ClientesPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
-  const query = useClientes(search);
+  const [editing, setEditing] = useState<Cliente | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Cliente | null>(null);
+  const query = useClientes(search, page);
   const create = useCreateCliente();
+  const update = useUpdateCliente();
 
   const [form, setForm] = useState({
     documento: "",
@@ -46,15 +53,55 @@ function ClientesPage() {
     ciudad: "",
   });
 
+  function resetForm() {
+    setEditing(null);
+    setForm({ documento: "", nombre: "", tipo_documento: "CC", celular: "", correo: "", direccion: "", ciudad: "" });
+  }
+
+  function openCreate() {
+    resetForm();
+    setOpen(true);
+  }
+
+  function openEdit(cliente: Cliente) {
+    setEditing(cliente);
+    setForm({
+      documento: cliente.documento ?? "",
+      nombre: cliente.nombre ?? "",
+      tipo_documento: cliente.tipo_documento ?? "CC",
+      celular: cliente.celular ?? "",
+      correo: cliente.correo ?? "",
+      direccion: cliente.direccion ?? "",
+      ciudad: cliente.ciudad ?? "",
+    });
+    setOpen(true);
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await create.mutateAsync(form);
-      toast.success("Cliente creado");
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, body: form });
+        toast.success("Cliente actualizado");
+      } else {
+        await create.mutateAsync(form);
+        toast.success("Cliente creado");
+      }
       setOpen(false);
-      setForm({ documento: "", nombre: "", tipo_documento: "CC", celular: "", correo: "", direccion: "", ciudad: "" });
+      resetForm();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo crear el cliente");
+      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el cliente");
+    }
+  }
+
+  async function toggleActive(cliente: Cliente) {
+    const next = !cliente.is_active;
+    try {
+      await update.mutateAsync({ id: cliente.id, body: { is_active: next } });
+      toast.success(next ? "Cliente activado" : "Cliente inactivado");
+      setConfirmTarget(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo cambiar el estado del cliente");
     }
   }
 
@@ -64,15 +111,21 @@ function ClientesPage() {
         title="Clientes"
         subtitle="Base de clientes del taller"
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openCreate}>
                 <Plus className="mr-1 h-4 w-4" /> Nuevo cliente
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nuevo cliente</DialogTitle>
+                <DialogTitle>{editing ? "Editar cliente" : "Nuevo cliente"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <Field label="Tipo documento">
@@ -97,8 +150,8 @@ function ClientesPage() {
                   <Input value={form.ciudad} onChange={(e) => setForm({ ...form, ciudad: e.target.value })} />
                 </Field>
                 <DialogFooter className="sm:col-span-2">
-                  <Button type="submit" disabled={create.isPending}>
-                    {create.isPending ? "Guardando..." : "Guardar cliente"}
+                  <Button type="submit" disabled={create.isPending || update.isPending}>
+                    {create.isPending || update.isPending ? "Guardando..." : editing ? "Guardar cambios" : "Guardar cliente"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -115,7 +168,10 @@ function ClientesPage() {
               className="pl-9"
               placeholder="Buscar por nombre o documento"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
 
@@ -134,7 +190,9 @@ function ClientesPage() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Celular</TableHead>
                     <TableHead>Correo</TableHead>
+                    <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Motos</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -144,15 +202,48 @@ function ClientesPage() {
                       <TableCell className="font-medium">{c.nombre}</TableCell>
                       <TableCell>{c.celular ?? "-"}</TableCell>
                       <TableCell>{c.correo ?? "-"}</TableCell>
+                      <TableCell>{c.is_active === false ? "Inactivo" : "Activo"}</TableCell>
                       <TableCell className="text-right">{c.motocicletas_count ?? 0}</TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" size="sm" onClick={() => openEdit(c)}>
+                            <Edit2 className="h-4 w-4" /> Editar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={c.is_active === false ? "secondary" : "outline"}
+                            size="sm"
+                            onClick={() => setConfirmTarget(c)}
+                            disabled={update.isPending}
+                          >
+                            <Power className="h-4 w-4" />
+                            {c.is_active === false ? "Activar" : "Inactivar"}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              <PaginationControls data={query.data} page={page} onPageChange={setPage} isLoading={query.isFetching} />
             </div>
           )}
         </CardContent>
       </Card>
+      <ConfirmActionDialog
+        open={!!confirmTarget}
+        onOpenChange={(value) => !value && setConfirmTarget(null)}
+        title={confirmTarget?.is_active === false ? "Activar cliente" : "Inactivar cliente"}
+        description={
+          confirmTarget?.is_active === false
+            ? `El cliente ${confirmTarget?.nombre ?? ""} volvera a estar disponible para nuevos procesos.`
+            : `El cliente ${confirmTarget?.nombre ?? ""} quedara oculto para nuevos procesos, pero se conserva todo su historial.`
+        }
+        confirmLabel={confirmTarget?.is_active === false ? "Activar cliente" : "Inactivar cliente"}
+        destructive={confirmTarget?.is_active !== false}
+        isPending={update.isPending}
+        onConfirm={() => confirmTarget && toggleActive(confirmTarget)}
+      />
     </div>
   );
 }

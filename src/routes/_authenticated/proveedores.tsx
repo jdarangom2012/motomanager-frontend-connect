@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Edit2, Plus, Power, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ConfirmActionDialog } from "@/components/confirm-action-dialog";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
-import { useCreateProveedor, useProveedores } from "@/lib/hooks";
+import { useCreateProveedor, useProveedores, useUpdateProveedor } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
-import type { ProveedorWrite } from "@/lib/types";
+import type { Proveedor, ProveedorWrite } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/proveedores")({
   ssr: false,
@@ -46,20 +48,64 @@ const EMPTY: ProveedorWrite = {
 
 function ProveedoresPage() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Proveedor | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Proveedor | null>(null);
   const [form, setForm] = useState<ProveedorWrite>(EMPTY);
-  const query = useProveedores(search);
+  const query = useProveedores(search, page);
   const create = useCreateProveedor();
+  const update = useUpdateProveedor();
+
+  function resetForm() {
+    setEditing(null);
+    setForm(EMPTY);
+  }
+
+  function openCreate() {
+    resetForm();
+    setOpen(true);
+  }
+
+  function openEdit(proveedor: Proveedor) {
+    setEditing(proveedor);
+    setForm({
+      nit: proveedor.nit,
+      nombre: proveedor.nombre,
+      direccion: "",
+      ciudad: proveedor.ciudad ?? "",
+      telefono: proveedor.telefono ?? "",
+      correo: proveedor.correo ?? "",
+      contacto: proveedor.contacto ?? "",
+    });
+    setOpen(true);
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await create.mutateAsync(form);
-      toast.success("Proveedor guardado");
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, body: form });
+        toast.success("Proveedor actualizado");
+      } else {
+        await create.mutateAsync(form);
+        toast.success("Proveedor guardado");
+      }
       setOpen(false);
-      setForm(EMPTY);
+      resetForm();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo crear el proveedor");
+      toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el proveedor");
+    }
+  }
+
+  async function toggleActive(proveedor: Proveedor) {
+    const next = !proveedor.is_active;
+    try {
+      await update.mutateAsync({ id: proveedor.id, body: { is_active: next } });
+      toast.success(next ? "Proveedor activado" : "Proveedor inactivado");
+      setConfirmTarget(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo cambiar el estado del proveedor");
     }
   }
 
@@ -71,15 +117,21 @@ function ProveedoresPage() {
         title="Proveedores"
         subtitle="Administra los proveedores de repuestos e insumos del taller."
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog
+            open={open}
+            onOpenChange={(value) => {
+              setOpen(value);
+              if (!value) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button>
+              <Button onClick={openCreate}>
                 <Plus className="mr-2 h-4 w-4" /> Nuevo proveedor
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-xl">
               <DialogHeader>
-                <DialogTitle>Nuevo proveedor</DialogTitle>
+                <DialogTitle>{editing ? "Editar proveedor" : "Nuevo proveedor"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
@@ -140,8 +192,8 @@ function ProveedoresPage() {
                   <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={!form.nit || !form.nombre || create.isPending}>
-                    {create.isPending ? "Guardando..." : "Guardar"}
+                  <Button type="submit" disabled={!form.nit || !form.nombre || create.isPending || update.isPending}>
+                    {create.isPending || update.isPending ? "Guardando..." : editing ? "Guardar cambios" : "Guardar"}
                   </Button>
                 </DialogFooter>
               </form>
@@ -156,7 +208,10 @@ function ProveedoresPage() {
           className="pl-9"
           placeholder="Buscar proveedor"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
       </div>
 
@@ -178,6 +233,7 @@ function ProveedoresPage() {
                   <TableHead>Telefono</TableHead>
                   <TableHead className="hidden lg:table-cell">Ciudad</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -196,13 +252,45 @@ function ProveedoresPage() {
                         {p.is_active === false ? "Inactivo" : "Activo"}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => openEdit(p)}>
+                          <Edit2 className="h-4 w-4" /> Editar
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={p.is_active === false ? "secondary" : "outline"}
+                          size="sm"
+                          onClick={() => setConfirmTarget(p)}
+                          disabled={update.isPending}
+                        >
+                          <Power className="h-4 w-4" />
+                          {p.is_active === false ? "Activar" : "Inactivar"}
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <PaginationControls data={query.data} page={page} onPageChange={setPage} isLoading={query.isFetching} />
           </CardContent>
         </Card>
       )}
+      <ConfirmActionDialog
+        open={!!confirmTarget}
+        onOpenChange={(value) => !value && setConfirmTarget(null)}
+        title={confirmTarget?.is_active === false ? "Activar proveedor" : "Inactivar proveedor"}
+        description={
+          confirmTarget?.is_active === false
+            ? `El proveedor ${confirmTarget?.nombre ?? ""} volvera a estar disponible en compras e inventario.`
+            : `El proveedor ${confirmTarget?.nombre ?? ""} dejara de usarse en nuevos movimientos, conservando compras e historial.`
+        }
+        confirmLabel={confirmTarget?.is_active === false ? "Activar proveedor" : "Inactivar proveedor"}
+        destructive={confirmTarget?.is_active !== false}
+        isPending={update.isPending}
+        onConfirm={() => confirmTarget && toggleActive(confirmTarget)}
+      />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import { useCompras, useConfirmarCompra, useCreateCompra, useProveedores, useRepuestos } from "@/lib/hooks";
 import { ApiError } from "@/lib/api";
@@ -41,13 +42,14 @@ const today = () => new Date().toISOString().slice(0, 10);
 function ComprasPage() {
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [proveedorId, setProveedorId] = useState("");
   const [factura, setFactura] = useState("");
   const [fecha, setFecha] = useState(today());
   const [detalles, setDetalles] = useState<CompraDetalleWrite[]>([]);
 
-  const query = useCompras({ ...(desde ? { fecha_desde: desde } : {}), ...(hasta ? { fecha_hasta: hasta } : {}) });
+  const query = useCompras({ ...(desde ? { fecha_desde: desde } : {}), ...(hasta ? { fecha_hasta: hasta } : {}), page });
   const proveedores = useProveedores("");
   const repuestos = useRepuestos("");
   const create = useCreateCompra();
@@ -225,13 +227,29 @@ function ComprasPage() {
           <Label htmlFor="desde" className="text-xs text-muted-foreground">
             Desde
           </Label>
-          <Input id="desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
+          <Input
+            id="desde"
+            type="date"
+            value={desde}
+            onChange={(e) => {
+              setDesde(e.target.value);
+              setPage(1);
+            }}
+          />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="hasta" className="text-xs text-muted-foreground">
             Hasta
           </Label>
-          <Input id="hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
+          <Input
+            id="hasta"
+            type="date"
+            value={hasta}
+            onChange={(e) => {
+              setHasta(e.target.value);
+              setPage(1);
+            }}
+          />
         </div>
       </div>
 
@@ -283,6 +301,7 @@ function ComprasPage() {
                 })}
               </TableBody>
             </Table>
+            <PaginationControls data={query.data} page={page} onPageChange={setPage} isLoading={query.isFetching} />
           </CardContent>
         </Card>
       )}

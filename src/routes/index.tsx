@@ -78,7 +78,7 @@ function LoginPage() {
             alt="MotoManager"
             width={1536}
             height={512}
-            className="mx-auto h-12 w-auto object-contain"
+            className="mx-auto h-auto w-[210px] max-w-full object-contain"
           />
           <h1 className="mt-6 text-center text-lg font-semibold tracking-tight">Acceso interno</h1>
 
@@ -164,12 +164,20 @@ function LoginPage() {
 
         <div className="mt-6 flex flex-col items-center gap-1">
           <span className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">Desarrollado por</span>
-          <img
-            src="/assets/brand/LogoNautilusTech.png"
-            alt="NautilusTech"
-            loading="lazy"
-            className="h-6 w-auto object-contain opacity-70 brightness-0 invert"
-          />
+          <a
+            href="https://nautilustech.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Abrir sitio web de NautilusTech"
+            className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          >
+            <img
+              src="/assets/brand/LogoNautilusTech.png"
+              alt="NautilusTech"
+              loading="lazy"
+              className="h-20 w-20 rounded-sm object-contain opacity-90 transition-opacity hover:opacity-100"
+            />
+          </a>
         </div>
       </div>
     </div>

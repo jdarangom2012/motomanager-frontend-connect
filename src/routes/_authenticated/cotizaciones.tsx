@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { PaginationControls } from "@/components/pagination-controls";
 import { EmptyState, ErrorState, PageHeader, TableSkeleton } from "@/components/states";
 import {
   useAprobarCotizacion,
@@ -45,10 +46,11 @@ const emptyLine: DocumentoDetalleWrite = {
 function CotizacionesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [page, setPage] = useState(1);
   const moneda = user?.empresa?.moneda ?? "COP";
   const clientes = useClientes("");
   const motos = useMotocicletas("");
-  const cotizaciones = useCotizaciones();
+  const cotizaciones = useCotizaciones(page);
   const create = useCreateCotizacion();
   const aprobar = useAprobarCotizacion();
   const convertir = useConvertirCotizacionEnOrden();
@@ -337,6 +339,12 @@ function CotizacionesPage() {
                   ))}
                 </TableBody>
               </Table>
+              <PaginationControls
+                data={cotizaciones.data}
+                page={page}
+                onPageChange={setPage}
+                isLoading={cotizaciones.isFetching}
+              />
             </div>
           )}
         </CardContent>
