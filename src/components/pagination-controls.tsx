@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import type { Paginated } from "@/lib/api";
 
 type PaginationControlsProps<T> = {
-  data?: Paginated<T>;
+  data?: Paginated<T> | undefined;
   page: number;
   pageSize?: number;
   onPageChange: (page: number) => void;
