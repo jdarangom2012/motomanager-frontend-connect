@@ -53,7 +53,11 @@ function AuditoriaPage() {
   const [entidad, setEntidad] = useState("todas");
   const [page, setPage] = useState(1);
   const [localSearch, setLocalSearch] = useState("");
-  const query = useAuditoria({ entidad_tipo: entidad === "todas" ? undefined : entidad, page, page_size: 50 });
+  const query = useAuditoria({
+    ...(entidad === "todas" ? {} : { entidad_tipo: entidad }),
+    page,
+    page_size: 50,
+  });
 
   const registros = (query.data?.results ?? []).filter((item) => {
     const q = localSearch.trim().toLowerCase();

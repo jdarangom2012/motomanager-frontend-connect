@@ -78,7 +78,7 @@ function InventarioPage() {
   function openEdit(repuesto: Repuesto) {
     setEditing(repuesto);
     setForm({
-      proveedor_id: repuesto.proveedor?.id,
+      ...(repuesto.proveedor ? { proveedor_id: repuesto.proveedor.id } : {}),
       codigo_interno: repuesto.codigo_interno,
       referencia_fabricante: repuesto.referencia_fabricante ?? "",
       codigo_barras: repuesto.codigo_barras ?? "",
