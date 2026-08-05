@@ -79,19 +79,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MotoManager | Gestion de talleres de motocicletas" },
+      { title: "Acceso interno | MotoManager" },
       {
         name: "description",
-        content: "SaaS multiempresa para talleres de motocicletas: recepcion, diagnostico, cotizaciones y ordenes.",
+        content: "Ingreso al sistema de gestion de talleres de motocicletas MotoManager de NautilusTech.",
       },
       { name: "author", content: "NautilusTech" },
-      { property: "og:title", content: "MotoManager | Gestion de talleres de motocicletas" },
+      { property: "og:title", content: "Acceso interno | MotoManager" },
       {
         property: "og:description",
-        content: "SaaS multiempresa para talleres de motocicletas: recepcion, diagnostico, cotizaciones y ordenes.",
+        content: "Ingreso al sistema de gestion de talleres de motocicletas MotoManager de NautilusTech.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Acceso interno | MotoManager" },
+      { name: "twitter:description", content: "Ingreso al sistema de gestion de talleres de motocicletas MotoManager de NautilusTech." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bbbd443d-ddd5-413b-9e82-f31e7e573207/id-preview-7b8ac472--28346008-c0dd-4a4c-9ac5-15a28b0f2e62.lovable.app-1785876820597.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/bbbd443d-ddd5-413b-9e82-f31e7e573207/id-preview-7b8ac472--28346008-c0dd-4a4c-9ac5-15a28b0f2e62.lovable.app-1785876820597.png" },
     ],
     links: [
       {

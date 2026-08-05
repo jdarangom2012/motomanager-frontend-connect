@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Acceso interno | MotoManager" },
       {
         property: "og:description",
-        content: "Ingreso al sistema de gestion de talleres de motocicletas MotoManager.",
+        content: "Ingreso al sistema de gestion de talleres de motocicletas MotoManager de NautilusTech.",
       },
     ],
   }),
